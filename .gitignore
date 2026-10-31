@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+.DS_Store
+# ROMs e saves nunca entram no repositório
+*.gb
+*.gbc
+*.sfc
+*.smc
+*.nes
+*.z64
+*.n64
+*.v64
+*.srm
+*.state

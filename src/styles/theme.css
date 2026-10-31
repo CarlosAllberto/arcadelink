@@ -1,0 +1,41 @@
+:root {
+  color-scheme: light;
+  --bg: #dcdde0;
+  --dot: rgb(0 0 0 / 0.1);
+  --fade: rgb(40 42 50 / 0.28);
+  --pill-bg: rgb(255 255 255 / 0.72);
+  --pill-border: rgb(255 255 255 / 0.8);
+  --pill-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  --text: #23252b;
+  --icon-bg: #23252b;
+  --icon-text: #fff;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #17181c;
+  --dot: rgb(255 255 255 / 0.08);
+  --fade: rgb(0 0 0 / 0.55);
+  --pill-bg: rgb(44 46 54 / 0.72);
+  --pill-border: rgb(255 255 255 / 0.1);
+  --pill-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  --text: #eceef2;
+  --icon-bg: #eceef2;
+  --icon-text: #17181c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #17181c;
+    --dot: rgb(255 255 255 / 0.08);
+    --fade: rgb(0 0 0 / 0.55);
+    --pill-bg: rgb(44 46 54 / 0.72);
+    --pill-border: rgb(255 255 255 / 0.1);
+    --pill-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+    --text: #eceef2;
+    --icon-bg: #eceef2;
+    --icon-text: #17181c;
+  }
+}
