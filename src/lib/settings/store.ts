@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { readSettingsFile, writeSettingsFile } from "@/lib/google/drive";
+import { getAppFolders, readSettingsFile, writeSettingsFile } from "@/lib/google/drive";
 import { ReconnectError } from "@/lib/google/token";
 import { applyTheme, getTheme } from "@/lib/theme/theme";
 import { defaultSettings, newerSettings, parseSettings, type Settings } from "./settings";
@@ -69,6 +69,10 @@ export function useDriveSync(userId: string | undefined) {
       const newest = raw === null ? local : newerSettings(local, parseSettings(raw));
       if (newest !== local) commit(newest);
       else await writeSettingsFile(local);
+      const { app, roms } = await getAppFolders();
+      const folder = current().romsFolder;
+      // Sem pasta, ou com a própria ArcadeLink escolhida, usa a Roms criada pelo app.
+      if (!cancelled && (!folder || folder.id === app.id)) updateSettings({ romsFolder: roms });
       if (!cancelled) setStatus("ok");
     }
 

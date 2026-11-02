@@ -18,6 +18,9 @@ export type ConsoleConfig = {
   labelStrips?: (Area & { radius: string })[];
 };
 
+/** Subpastas criadas em `ArcadeLink/Roms` no Drive, como no RetroArch. */
+export const romFolders = ["GB", "GBC", "GBA", "NES", "SNES", "N64"];
+
 // Para adicionar um console: exporte os PNGs para public/cartridges e inclua um item aqui.
 export const consoles: ConsoleConfig[] = [
   {

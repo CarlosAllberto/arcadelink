@@ -1,3 +1,4 @@
+import { romFolders } from "@/config/consoles";
 import { getAccessToken } from "./token";
 
 const API = "https://www.googleapis.com/drive/v3/files";
@@ -5,7 +6,7 @@ const UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
 const FOLDER = "application/vnd.google-apps.folder";
 const SETTINGS_FILE = "settings.json";
 
-type DriveFile = { id: string };
+type DriveFile = { id: string; name: string };
 
 async function drive(url: string, init: RequestInit = {}) {
   const token = await getAccessToken();
@@ -18,7 +19,7 @@ async function drive(url: string, init: RequestInit = {}) {
 }
 
 async function list(query: string): Promise<DriveFile[]> {
-  const params = new URLSearchParams({ q: `${query} and trashed = false`, fields: "files(id)", pageSize: "1000" });
+  const params = new URLSearchParams({ q: `${query} and trashed = false`, fields: "files(id,name)", pageSize: "1000" });
   const { files } = await (await drive(`${API}?${params}`)).json();
   return files;
 }
@@ -37,30 +38,35 @@ async function findOrCreate(name: string, parent: string, mimeType: string) {
   return found ?? create(name, parent, mimeType);
 }
 
-let appFolder: Promise<DriveFile> | null = null;
+let appFolders: Promise<{ app: DriveFile; roms: DriveFile }> | null = null;
 
-/** Pasta do app, com `Saves/` dentro. Criadas pelo app, ficam cobertas pelo `drive.file`. */
-function getAppFolder() {
-  appFolder ??= (async () => {
-    const folder = await findOrCreate("ArcadeLink", "root", FOLDER);
-    await findOrCreate("Saves", folder.id, FOLDER);
-    return folder;
+/** `ArcadeLink/` com `Saves/` e `Roms/<console>/`. Criadas pelo app, ficam cobertas pelo `drive.file`. */
+export function getAppFolders() {
+  appFolders ??= (async () => {
+    const app = await findOrCreate("ArcadeLink", "root", FOLDER);
+    await findOrCreate("Saves", app.id, FOLDER);
+    const roms = await findOrCreate("Roms", app.id, FOLDER);
+    const existing = (await list(`'${roms.id}' in parents`)).map((file) => file.name);
+    for (const name of romFolders) {
+      if (!existing.includes(name)) await create(name, roms.id, FOLDER);
+    }
+    return { app, roms };
   })().catch((error) => {
-    appFolder = null;
+    appFolders = null;
     throw error;
   });
-  return appFolder;
+  return appFolders;
 }
 
 export async function readSettingsFile(): Promise<unknown | null> {
-  const { id } = await getAppFolder();
+  const { id } = (await getAppFolders()).app;
   const [file] = await list(`name = '${SETTINGS_FILE}' and '${id}' in parents`);
   if (!file) return null;
   return (await drive(`${API}/${file.id}?alt=media`)).json();
 }
 
 export async function writeSettingsFile(settings: unknown) {
-  const { id } = await getAppFolder();
+  const { id } = (await getAppFolders()).app;
   const file = await findOrCreate(SETTINGS_FILE, id, "application/json");
   await drive(`${UPLOAD}/${file.id}?uploadType=media`, {
     method: "PATCH",
