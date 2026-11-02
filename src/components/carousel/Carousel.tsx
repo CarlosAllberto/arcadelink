@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRef, type WheelEvent } from "react";
 import type { ConsoleConfig } from "@/config/consoles";
-import type { Game } from "@/config/sample-games";
+import type { Game } from "@/config/games";
 import { circularOffset } from "@/lib/carousel";
 import { Cartridge } from "./Cartridge";
 

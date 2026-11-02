@@ -4,13 +4,14 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const home = new URL("/", request.nextUrl.origin);
-  if (!code) return NextResponse.redirect(home);
+  const failed = new URL("/login?erro=1", request.nextUrl.origin);
+  if (!code) return NextResponse.redirect(failed);
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     console.error("Falha ao trocar o código de login:", error.message);
-    return NextResponse.redirect(home);
+    return NextResponse.redirect(failed);
   }
 
   const refreshToken = data.session.provider_refresh_token;

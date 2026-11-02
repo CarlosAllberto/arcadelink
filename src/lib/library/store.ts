@@ -7,7 +7,7 @@ import { classifyRoms, type Rom } from "./roms";
 const STORAGE_KEY = "arcadelink:library";
 
 export type Library = {
-  /** Null até a primeira leitura do Drive: o carrossel mostra os jogos de exemplo. */
+  /** Null até a primeira leitura do Drive. */
   roms: Rom[] | null;
   ignored: number;
   coversVersion: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { menuActions } from "@/lib/emulator/options";
 import { getSettings } from "@/lib/settings/store";
 import { isCapturing } from "./capture";
 
@@ -31,18 +32,22 @@ const REPEAT_DELAY = 350;
 const REPEAT_RATE = 160;
 
 function readPad(pad: Gamepad): Record<NavAction, boolean> {
-  const pressed = (index: number) => Boolean(pad.buttons[index]?.pressed);
+  const { menuPad } = getSettings();
+  const pressed = (action: NavAction) => {
+    const standard = menuActions.find(({ id }) => id === action)?.pad;
+    return Boolean(pad.buttons[menuPad[action] ?? standard ?? -1]?.pressed);
+  };
   const [axisX = 0, axisY = 0] = pad.axes;
   return {
-    left: pressed(14) || axisX < -0.5,
-    right: pressed(15) || axisX > 0.5,
-    up: pressed(12) || axisY < -0.5,
-    down: pressed(13) || axisY > 0.5,
-    l: pressed(4),
-    r: pressed(5),
-    y: pressed(3),
-    a: pressed(0),
-    b: pressed(1),
+    left: pressed("left") || axisX < -0.5,
+    right: pressed("right") || axisX > 0.5,
+    up: pressed("up") || axisY < -0.5,
+    down: pressed("down") || axisY > 0.5,
+    l: pressed("l"),
+    r: pressed("r"),
+    y: pressed("y"),
+    a: pressed("a"),
+    b: pressed("b"),
   };
 }
 

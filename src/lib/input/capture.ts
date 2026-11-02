@@ -1,4 +1,4 @@
-const PAD_LABELS: Record<number, string> = {
+export const PAD_LABELS: Record<number, string> = {
   0: "BUTTON_1",
   1: "BUTTON_2",
   2: "BUTTON_3",
@@ -53,13 +53,13 @@ function pressedButton() {
   return -1;
 }
 
-/** Próximo botão do gamepad. Espera soltar o botão que abriu a captura e o que foi escolhido. */
+/** Índice do próximo botão do gamepad. Espera soltar o botão que abriu a captura e o que foi escolhido. */
 export function capturePad() {
   capturing = true;
   const deadline = performance.now() + TIMEOUT;
   let armed = false;
   let chosen: number | null = null;
-  return new Promise<string | null>((resolve) => {
+  return new Promise<number | null>((resolve) => {
     function poll(now: number) {
       const pressed = pressedButton();
       if (chosen === null) {
@@ -69,7 +69,7 @@ export function capturePad() {
       const released = chosen !== null && pressed < 0;
       if (released || now > deadline) {
         capturing = false;
-        return resolve(chosen === null ? null : (PAD_LABELS[chosen] ?? null));
+        return resolve(chosen);
       }
       requestAnimationFrame(poll);
     }

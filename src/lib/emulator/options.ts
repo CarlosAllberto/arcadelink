@@ -35,13 +35,15 @@ export const gameButtons = [
   { id: 7, label: "Direita" },
 ];
 
+/** Ações do menu, com a tecla e o botão padrão do gamepad. */
 export const menuActions = [
-  { id: "left", label: "Jogo anterior", key: "arrowleft" },
-  { id: "right", label: "Próximo jogo", key: "arrowright" },
-  { id: "up", label: "Subir no painel", key: "arrowup" },
-  { id: "down", label: "Descer no painel", key: "arrowdown" },
-  { id: "l", label: "Console anterior (L)", key: "q" },
-  { id: "r", label: "Próximo console (R)", key: "e" },
-  { id: "y", label: "Ajustes (Y)", key: "y" },
-  { id: "a", label: "Confirmar (A)", key: "enter" },
+  { id: "left", label: "Jogo anterior", key: "arrowleft", pad: 14 },
+  { id: "right", label: "Próximo jogo", key: "arrowright", pad: 15 },
+  { id: "up", label: "Subir no painel", key: "arrowup", pad: 12 },
+  { id: "down", label: "Descer no painel", key: "arrowdown", pad: 13 },
+  { id: "l", label: "Console anterior (L)", key: "q", pad: 4 },
+  { id: "r", label: "Próximo console (R)", key: "e", pad: 5 },
+  { id: "y", label: "Ajustes (Y)", key: "y", pad: 3 },
+  { id: "a", label: "Confirmar (A)", key: "enter", pad: 0 },
+  { id: "b", label: "Voltar (B)", key: "escape", pad: 1 },
 ];

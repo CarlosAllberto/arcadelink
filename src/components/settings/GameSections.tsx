@@ -3,11 +3,23 @@
 import { useState } from "react";
 import { consoles } from "@/config/consoles";
 import { gameButtons, menuActions, shaderOptions } from "@/lib/emulator/options";
-import { captureKey, capturePad } from "@/lib/input/capture";
+import { captureKey, capturePad, PAD_LABELS } from "@/lib/input/capture";
 import type { Controls } from "@/lib/settings/settings";
 import { updateSettings, useSettings } from "@/lib/settings/store";
 
 const PLAYERS = [0, 1];
+
+function ColumnTitles() {
+  return (
+    <div className="settings-row settings-columns" aria-hidden="true">
+      <span />
+      <span className="settings-bindings">
+        <span>Teclado</span>
+        <span>Gamepad</span>
+      </span>
+    </div>
+  );
+}
 const SAVE_INTERVALS = [
   { value: 0, label: "Só ao pausar ou sair" },
   { value: 1, label: "1 minuto" },
@@ -16,7 +28,7 @@ const SAVE_INTERVALS = [
 ];
 
 export function ControlsSection() {
-  const { controls, menuKeys } = useSettings();
+  const { controls, menuKeys, menuPad } = useSettings();
   const [player, setPlayer] = useState(0);
   const [waiting, setWaiting] = useState("");
 
@@ -36,9 +48,16 @@ export function ControlsSection() {
 
   async function bindPad(button: number) {
     setWaiting(`pad-${button}`);
-    const pad = await capturePad();
+    const index = await capturePad();
     setWaiting("");
-    if (pad) bind(button, { pad });
+    if (index !== null) bind(button, { pad: PAD_LABELS[index] });
+  }
+
+  async function bindMenuPad(action: string) {
+    setWaiting(`menu-pad-${action}`);
+    const index = await capturePad();
+    setWaiting("");
+    if (index !== null) updateSettings({ menuPad: { ...menuPad, [action]: index } });
   }
 
   async function bindMenu(action: string) {
@@ -60,6 +79,7 @@ export function ControlsSection() {
       </div>
       <p>Toque em um campo e aperte a tecla ou o botão. Sem escolha, vale o padrão do EmulatorJS.</p>
       <div className="settings-grid">
+        <ColumnTitles />
         {gameButtons.map(({ id, label }) => (
           <div key={id} className="settings-row">
             <span>{label}</span>
@@ -84,18 +104,22 @@ export function ControlsSection() {
       <p>Zona morta do analógico: fixa em 0,5 nesta versão do EmulatorJS.</p>
       <h2>Menu</h2>
       <div className="settings-grid">
-        {menuActions.map(({ id, label, key }) => (
+        <ColumnTitles />
+        {menuActions.map(({ id, label, key, pad }) => (
           <div key={id} className="settings-row">
             <span>{label}</span>
             <span className="settings-bindings">
               <button type="button" aria-label={`Tecla de ${label}`} onClick={() => bindMenu(id)}>
                 {waiting === `menu-${id}` ? "Aperte" : (menuKeys[id] ?? key)}
               </button>
+              <button type="button" aria-label={`Botão de ${label}`} onClick={() => bindMenuPad(id)}>
+                {waiting === `menu-pad-${id}` ? "Aperte" : PAD_LABELS[menuPad[id] ?? pad]}
+              </button>
             </span>
           </div>
         ))}
       </div>
-      <button type="button" className="settings-action" onClick={() => updateSettings({ menuKeys: {} })}>
+      <button type="button" className="settings-action" onClick={() => updateSettings({ menuKeys: {}, menuPad: {} })}>
         Restaurar menu
       </button>
     </section>

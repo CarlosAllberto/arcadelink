@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FullscreenOnGesture } from "@/components/ui/FullscreenOnGesture";
 import { consoles } from "@/config/consoles";
 import { loadBatterySave, startEmulator, type Emulator } from "@/lib/emulator/emulator";
 import { createSaveQueue } from "@/lib/emulator/saves";
@@ -46,7 +47,9 @@ export function Player({ romId }: { romId: string }) {
   const [error, setError] = useState("");
   const [uploadFailed, setUploadFailed] = useState(false);
   const started = useRef(false);
-  const session = useRef<{ exit: () => void } | null>(null);
+  const session = useRef<{ exit: () => Promise<void> } | null>(null);
+  const launched = useRef(false);
+  const running = useRef(false);
 
   useEffect(() => {
     // O efeito roda duas vezes em desenvolvimento, e só pode existir um emulador por página.
@@ -64,6 +67,8 @@ export function Player({ romId }: { romId: string }) {
         readSaveFile(`${rom.name}.srm`, folder),
         readSaveFile(`${rom.name}.state`, folder),
       ]);
+      // A pessoa pode ter voltado à tela inicial durante o download.
+      if (!document.getElementById("game")) return null;
       const settings = getSettings();
       const saves = createSaveQueue(rom.name, folder, () => setUploadFailed(true));
       if (battery) saves.setLastBattery(battery);
@@ -84,6 +89,7 @@ export function Player({ romId }: { romId: string }) {
       }
       session.current = { exit };
 
+      launched.current = true;
       startEmulator({
         core: config.core,
         title: romTitle(rom.name),
@@ -98,6 +104,7 @@ export function Player({ romId }: { romId: string }) {
         },
         onStart(current) {
           emulator = current;
+          running.current = true;
           applyControls(current);
           if (battery) loadBatterySave(current, battery);
           if (state && current.gameManager.supportsStates()) current.gameManager.loadState(state);
@@ -136,12 +143,21 @@ export function Player({ romId }: { romId: string }) {
         console.error("Falha ao abrir o jogo:", failure);
         setError(
           failure instanceof ReconnectError
-            ? "Sua conexão com o Google expirou. Volte e reconecte na Biblioteca."
+            ? "Sua conexão com o Google expirou. Volte e reconecte pelo avatar."
             : "Não foi possível baixar o jogo do Drive.",
         );
         setStage("error");
       });
   }, [romId]);
+
+  // Saída pelo Voltar do navegador: salva e recarrega, senão o emulador segue rodando sem tela.
+  useEffect(
+    () => () => {
+      if (running.current) session.current?.exit().finally(leave);
+      else if (launched.current) leave();
+    },
+    [],
+  );
 
   useEffect(() => {
     let frame = 0;
@@ -160,6 +176,7 @@ export function Player({ romId }: { romId: string }) {
 
   return (
     <main className="player">
+      <FullscreenOnGesture />
       <div id="game" />
       {stage === "playing" && (
         <button type="button" className="pill player-exit" onClick={() => session.current?.exit()}>

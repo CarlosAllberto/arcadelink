@@ -9,7 +9,7 @@ import { handlePanelAction, SettingsPanel } from "@/components/settings/Settings
 import { TopBar } from "@/components/topbar/TopBar";
 import { ButtonIcon } from "@/components/ui/ButtonIcon";
 import { consoles, type ConsoleId } from "@/config/consoles";
-import { emptyGame, generatedCover, sampleGames, type Game } from "@/config/sample-games";
+import { generatedCover, type Game } from "@/config/games";
 import { wrapIndex } from "@/lib/carousel";
 import { useNavigation } from "@/lib/input/useNavigation";
 import { romTitle } from "@/lib/library/roms";
@@ -18,18 +18,16 @@ import { useDriveSync, useSettings } from "@/lib/settings/store";
 import { useUser } from "@/lib/supabase/useUser";
 
 function gamesByConsole({ roms, coversVersion }: Library) {
-  if (!roms) return sampleGames;
   const games = {} as Record<ConsoleId, Game[]>;
-  for (const { id, folders } of consoles) {
-    const own = roms.filter((rom) => rom.console === id);
-    games[id] = own.length
-      ? own.map((rom) => {
-          const title = romTitle(rom.name);
-          const { color, cover } = generatedCover(title);
-          const params = new URLSearchParams({ name: title, v: String(coversVersion) });
-          return { id: rom.id, title, color, cover: `/api/cover/${id}?${params}`, fallback: cover };
-        })
-      : [emptyGame(folders[0])];
+  for (const { id } of consoles) {
+    games[id] = (roms ?? [])
+      .filter((rom) => rom.console === id)
+      .map((rom) => {
+        const title = romTitle(rom.name);
+        const { color, cover } = generatedCover(title);
+        const params = new URLSearchParams({ name: title, v: String(coversVersion) });
+        return { id: rom.id, title, color, cover: `/api/cover/${id}?${params}`, fallback: cover };
+      });
   }
   return games;
 }
@@ -50,9 +48,18 @@ export function Home() {
   const current = consoles[consoleIndex];
   const games = allGames[current.id];
   // A biblioteca pode encolher depois de um reescaneamento.
-  const gameIndex = wrapIndex(gameIndexes[current.id] ?? 0, games.length);
+  const gameIndex = games.length ? wrapIndex(gameIndexes[current.id] ?? 0, games.length) : 0;
+  const game: Game | undefined = games[gameIndex];
+  const notice = library.roms
+    ? `Nenhuma ROM em Roms/${current.folders[0]}`
+    : syncStatus === "reconnect"
+      ? "Sua conexão com o Google expirou. Reconecte pelo avatar"
+      : library.failed || syncStatus === "error"
+        ? "Não foi possível ler a biblioteca"
+        : null;
 
   function moveGame(delta: number) {
+    if (!games.length) return;
     setGameIndexes((indexes) => ({
       ...indexes,
       [current.id]: wrapIndex((indexes[current.id] ?? 0) + delta, games.length),
@@ -64,9 +71,10 @@ export function Home() {
   }
 
   function play() {
-    // Só jogos reais têm capa reserva; exemplos e consoles vazios não abrem.
-    const game = games[gameIndex];
-    if (game.fallback) router.push(`/play/${game.id}`);
+    if (!game) return;
+    // O clique ou a tecla que abre o jogo já vale como gesto; o A do gamepad não.
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    router.push(`/play/${game.id}`);
   }
 
   useNavigation((action) => {
@@ -85,6 +93,7 @@ export function Home() {
         <TopBar
           consoleName={current.name}
           user={user}
+          syncStatus={syncStatus}
           onPreviousConsole={() => moveConsole(-1)}
           onNextConsole={() => moveConsole(1)}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -99,21 +108,34 @@ export function Home() {
               exit={{ opacity: 0, y: -24 }}
               transition={{ duration: 0.16 }}
             >
-              <Carousel
-                config={current}
-                games={games}
-                index={gameIndex}
-                floating={settings.floating}
-                onMove={moveGame}
-                onPlay={play}
-              />
+              {game ? (
+                <Carousel
+                  config={current}
+                  games={games}
+                  index={gameIndex}
+                  floating={settings.floating}
+                  onMove={moveGame}
+                  onPlay={play}
+                />
+              ) : (
+                <div className="stage-notice" role="status">
+                  {notice ?? (
+                    <>
+                      <span className="spinner" aria-hidden="true" />
+                      Lendo sua biblioteca
+                    </>
+                  )}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </section>
-        <button type="button" className="pill game-title" aria-live="polite" onClick={play}>
-          <ButtonIcon label="A" />
-          <span>{games[gameIndex].title}</span>
-        </button>
+        {game && (
+          <button type="button" className="pill game-title" aria-live="polite" onClick={play}>
+            <ButtonIcon label="A" />
+            <span>{game.title}</span>
+          </button>
+        )}
         <footer className="bottombar">
           <button type="button" className="pill theme-pill" onClick={() => setSettingsOpen(true)}>
             <ButtonIcon label="Y" />

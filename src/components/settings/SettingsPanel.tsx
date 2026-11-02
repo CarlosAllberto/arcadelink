@@ -5,12 +5,10 @@ import { useEffect, useState, type RefObject } from "react";
 import { ButtonIcon } from "@/components/ui/ButtonIcon";
 import { ControlsSection, SavesSection, VideoSection } from "./GameSections";
 import { wrapIndex } from "@/lib/carousel";
-import { pickFolder } from "@/lib/google/picker";
 import type { NavAction } from "@/lib/input/useNavigation";
-import { clearLibrary, refreshCovers, scanLibrary, useLibrary } from "@/lib/library/store";
+import { refreshCovers, scanLibrary, useLibrary } from "@/lib/library/store";
 import type { Theme } from "@/lib/settings/settings";
 import { updateSettings, useSettings, type SyncStatus } from "@/lib/settings/store";
-import { signIn, signOut } from "@/lib/supabase/useUser";
 
 const TABS = ["Aparência", "Biblioteca", "Áudio", "Controles", "Vídeo", "Saves"] as const;
 const THEMES: { value: Theme; label: string }[] = [
@@ -22,7 +20,7 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
   off: "Sem conexão com o Drive",
   syncing: "Sincronizando com o Drive",
   ok: "Sincronizado com o Drive",
-  reconnect: "Sua conexão com o Google expirou",
+  reconnect: "Sua conexão com o Google expirou. Reconecte pelo avatar",
   error: "Não foi possível falar com o Drive",
 };
 
@@ -70,7 +68,6 @@ type Props = {
 export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Props) {
   const settings = useSettings();
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
-  const [folderError, setFolderError] = useState(false);
   const library = useLibrary();
   const romsFolderId = settings.romsFolder?.id;
 
@@ -88,17 +85,6 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
         ? `${library.roms.length} jogos, ${library.ignored} arquivos ignorados`
         : "Biblioteca ainda não lida";
 
-  async function chooseFolder() {
-    setFolderError(false);
-    try {
-      const folder = await pickFolder();
-      if (folder) updateSettings({ romsFolder: folder });
-    } catch (error) {
-      console.error("Falha ao escolher a pasta:", error);
-      setFolderError(true);
-    }
-  }
-
   return (
     <dialog
       ref={dialogRef}
@@ -110,20 +96,25 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
       }}
     >
       <div className="settings-body">
-        <div className="settings-tabs" role="tablist">
+        <div className="settings-tabs">
           <ButtonIcon label="L" />
-          {TABS.map((name) => (
-            <button
-              key={name}
-              type="button"
-              role="tab"
-              data-tab
-              aria-selected={tab === name}
-              onClick={() => setTab(name)}
-            >
-              {name}
-            </button>
-          ))}
+          <div className="settings-tab-list" role="tablist">
+            {TABS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                role="tab"
+                data-tab
+                aria-selected={tab === name}
+                onClick={(event) => {
+                  setTab(name);
+                  event.currentTarget.scrollIntoView({ block: "nearest", inline: "center" });
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
           <ButtonIcon label="R" />
         </div>
 
@@ -164,42 +155,9 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
         {tab === "Biblioteca" && (
           <section className="settings-section" aria-label="Biblioteca">
             <h2>Conta</h2>
-            {user ? (
-              <>
-                <p>{user.email}</p>
-                <p role="status">{SYNC_LABEL[syncStatus]}</p>
-                {syncStatus === "reconnect" && (
-                  <button type="button" className="settings-action" onClick={signIn}>
-                    Reconectar ao Google
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="settings-action"
-                  onClick={async () => {
-                    await signOut();
-                    clearLibrary();
-                  }}
-                >
-                  Sair
-                </button>
-              </>
-            ) : (
-              <button type="button" className="settings-action" onClick={signIn}>
-                Entrar com Google
-              </button>
-            )}
+            <p role="status">{SYNC_LABEL[syncStatus]}</p>
             <h2>Pasta de ROMs</h2>
-            <p>{settings.romsFolder?.name ?? "Nenhuma pasta escolhida"}</p>
-            <button
-              type="button"
-              className="settings-action"
-              disabled={!user || syncStatus === "reconnect"}
-              onClick={chooseFolder}
-            >
-              {settings.romsFolder ? "Trocar pasta" : "Escolher pasta"}
-            </button>
-            {folderError && <p role="status">Não foi possível abrir a pasta. Tente de novo.</p>}
+            <p>ArcadeLink/Roms, com uma pasta por console</p>
             <p role="status">{librarySummary}</p>
             <div className="settings-choice">
               <button

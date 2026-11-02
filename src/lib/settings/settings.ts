@@ -23,6 +23,8 @@ export type Settings = ConsoleSettings & {
   controls: Controls;
   /** Tecla de cada ação do menu, quando diferente do padrão. */
   menuKeys: Record<string, string>;
+  /** Índice do botão do gamepad de cada ação do menu, quando diferente do padrão. */
+  menuPad: Record<string, number>;
   consoles: Partial<Record<ConsoleId, Partial<ConsoleSettings>>>;
   updatedAt: number;
 };
@@ -39,6 +41,7 @@ export const defaultSettings: Settings = {
   autoStateOnExit: true,
   controls: {},
   menuKeys: {},
+  menuPad: {},
   consoles: {},
   updatedAt: 0,
 };
@@ -79,6 +82,7 @@ export function parseSettings(raw: unknown): Settings {
     autoStateOnExit: flag(value.autoStateOnExit, defaultSettings.autoStateOnExit),
     controls: record<Controls>(value.controls),
     menuKeys: record<Settings["menuKeys"]>(value.menuKeys),
+    menuPad: record<Settings["menuPad"]>(value.menuPad),
     consoles: record<Settings["consoles"]>(value.consoles),
     updatedAt: typeof value.updatedAt === "number" ? value.updatedAt : 0,
   };

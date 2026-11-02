@@ -1,5 +1,7 @@
 import { Home } from "@/components/Home";
+import { requireUser } from "@/lib/supabase/server";
 
-export default function Page() {
+export default async function Page() {
+  await requireUser();
   return <Home />;
 }

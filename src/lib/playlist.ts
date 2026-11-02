@@ -1,7 +1,11 @@
 export type Track = { title: string; src: string };
 
-// Faixas em public/music ou URLs. Só músicas livres de direitos autorais.
+// Faixas originais de scripts/generate-demo-music.mjs. Só músicas livres de direitos autorais.
 export const playlist: Track[] = [
-  { title: "Demo 8-bit 1", src: "/music/demo-1.wav" },
-  { title: "Demo 8-bit 2", src: "/music/demo-2.wav" },
+  { title: "Tela de Título", src: "/music/tela-de-titulo.m4a" },
+  { title: "Floresta Pixel", src: "/music/floresta-pixel.m4a" },
+  { title: "Corrida Neon", src: "/music/corrida-neon.m4a" },
+  { title: "Castelo Noturno", src: "/music/castelo-noturno.m4a" },
+  { title: "Mar de Bits", src: "/music/mar-de-bits.m4a" },
+  { title: "Chefão Final", src: "/music/chefao-final.m4a" },
 ];

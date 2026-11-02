@@ -71,10 +71,8 @@ export function useDriveSync(userId: string | undefined) {
       const newest = raw === null ? local : newerSettings(local, parseSettings(raw));
       if (newest !== local) commit(newest);
       else await writeSettingsFile(local);
-      const { app, roms } = await getAppFolders();
-      const folder = current().romsFolder;
-      // Sem pasta, ou com a própria ArcadeLink escolhida, usa a Roms criada pelo app.
-      if (!cancelled && (!folder || folder.id === app.id)) updateSettings({ romsFolder: roms });
+      const { roms } = await getAppFolders();
+      if (!cancelled && current().romsFolder?.id !== roms.id) updateSettings({ romsFolder: roms });
       if (!cancelled) setStatus("ok");
     }
 

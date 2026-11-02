@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, type SyntheticEvent } from "react";
 import type { ConsoleConfig } from "@/config/consoles";
-import type { Game } from "@/config/sample-games";
+import type { Game } from "@/config/games";
 import { dominantColor } from "@/lib/library/roms";
 
 const SIZES = "(max-width: 700px) 80vw, 620px";

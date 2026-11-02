@@ -31,20 +31,6 @@ export const romFolders = ["GB", "GBC", "GBA", "NES", "SNES", "N64"];
 // Para adicionar um console: exporte os PNGs para public/cartridges e inclua um item aqui.
 export const consoles: ConsoleConfig[] = [
   {
-    id: "gb",
-    name: "Game Boy",
-    core: "gb",
-    folders: ["GB", "GBC"],
-    extensions: ["gb", "gbc"],
-    coverSystems: ["Nintendo - Game Boy", "Nintendo - Game Boy Color"],
-    image: "/cartridges/gb.png",
-    overlay: "/cartridges/gb-overlay.png",
-    width: 450,
-    height: 514,
-    cover: { x: 80, y: 153, width: 290, height: 290 },
-    gloss: true,
-  },
-  {
     id: "snes",
     name: "SNES",
     core: "snes",
@@ -61,6 +47,20 @@ export const consoles: ConsoleConfig[] = [
       { x: 73, y: 43, width: 46, height: 258, radius: "74% 0 0 74% / 13% 0 0 13%" },
       { x: 688, y: 43, width: 134, height: 258, radius: "0 25% 25% 0 / 0 13% 13% 0" },
     ],
+  },
+  {
+    id: "gb",
+    name: "Game Boy",
+    core: "gb",
+    folders: ["GB", "GBC"],
+    extensions: ["gb", "gbc"],
+    coverSystems: ["Nintendo - Game Boy", "Nintendo - Game Boy Color"],
+    image: "/cartridges/gb.png",
+    overlay: "/cartridges/gb-overlay.png",
+    width: 450,
+    height: 514,
+    cover: { x: 80, y: 153, width: 290, height: 290 },
+    gloss: true,
   },
   {
     id: "nes",

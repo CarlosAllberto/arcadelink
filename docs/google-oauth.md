@@ -1,6 +1,6 @@
 # Google OAuth para uso pessoal
 
-Com o app do Google Cloud em modo de teste, o refresh token expira em 7 dias. Quando isso acontece, o painel mostra "Reconectar ao Google": basta entrar de novo, e a pasta escolhida continua guardada.
+Com o app do Google Cloud em modo de teste, o refresh token expira em 7 dias. Quando isso acontece, o menu do avatar mostra "Reconectar ao Google": basta entrar de novo.
 
 Para não repetir isso toda semana:
 
