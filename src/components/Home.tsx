@@ -1,18 +1,37 @@
 "use client";
 
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Carousel } from "@/components/carousel/Carousel";
 import { Miniplayer } from "@/components/miniplayer/Miniplayer";
 import { handlePanelAction, SettingsPanel } from "@/components/settings/SettingsPanel";
 import { TopBar } from "@/components/topbar/TopBar";
 import { ButtonIcon } from "@/components/ui/ButtonIcon";
 import { consoles, type ConsoleId } from "@/config/consoles";
-import { sampleGames } from "@/config/sample-games";
+import { emptyGame, generatedCover, sampleGames, type Game } from "@/config/sample-games";
 import { wrapIndex } from "@/lib/carousel";
 import { useNavigation } from "@/lib/input/useNavigation";
+import { romTitle } from "@/lib/library/roms";
+import { useLibrary, useLibraryScan, type Library } from "@/lib/library/store";
 import { useDriveSync, useSettings } from "@/lib/settings/store";
 import { useUser } from "@/lib/supabase/useUser";
+
+function gamesByConsole({ roms, coversVersion }: Library) {
+  if (!roms) return sampleGames;
+  const games = {} as Record<ConsoleId, Game[]>;
+  for (const { id, folders } of consoles) {
+    const own = roms.filter((rom) => rom.console === id);
+    games[id] = own.length
+      ? own.map((rom) => {
+          const title = romTitle(rom.name);
+          const { color, cover } = generatedCover(title);
+          const params = new URLSearchParams({ name: title, v: String(coversVersion) });
+          return { id: rom.id, title, color, cover: `/api/cover/${id}?${params}`, fallback: cover };
+        })
+      : [emptyGame(folders[0])];
+  }
+  return games;
+}
 
 export function Home() {
   const [consoleIndex, setConsoleIndex] = useState(0);
@@ -22,10 +41,14 @@ export function Home() {
   const user = useUser();
   const syncStatus = useDriveSync(user?.id);
   const settings = useSettings();
+  const library = useLibrary();
+  useLibraryScan(syncStatus === "ok" ? settings.romsFolder?.id : undefined);
+  const allGames = useMemo(() => gamesByConsole(library), [library]);
 
   const current = consoles[consoleIndex];
-  const games = sampleGames[current.id];
-  const gameIndex = gameIndexes[current.id] ?? 0;
+  const games = allGames[current.id];
+  // A biblioteca pode encolher depois de um reescaneamento.
+  const gameIndex = wrapIndex(gameIndexes[current.id] ?? 0, games.length);
 
   function moveGame(delta: number) {
     setGameIndexes((indexes) => ({

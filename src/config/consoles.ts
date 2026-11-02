@@ -5,6 +5,11 @@ type Area = { x: number; y: number; width: number; height: number };
 export type ConsoleConfig = {
   id: ConsoleId;
   name: string;
+  /** Subpastas de `Roms` deste console; a primeira aparece nas mensagens. */
+  folders: string[];
+  extensions: string[];
+  /** Sistemas na base libretro-thumbnails. */
+  coverSystems: string[];
   image: string;
   /** Logo e selos da etiqueta, que ficam por cima da capa. */
   overlay: string;
@@ -26,6 +31,9 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "gb",
     name: "Game Boy",
+    folders: ["GB", "GBC"],
+    extensions: ["gb", "gbc"],
+    coverSystems: ["Nintendo - Game Boy", "Nintendo - Game Boy Color"],
     image: "/cartridges/gb.png",
     overlay: "/cartridges/gb-overlay.png",
     width: 450,
@@ -36,6 +44,9 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "snes",
     name: "SNES",
+    folders: ["SNES"],
+    extensions: ["sfc", "smc"],
+    coverSystems: ["Nintendo - Super Nintendo Entertainment System"],
     image: "/cartridges/snes.png",
     overlay: "/cartridges/snes-overlay.png",
     width: 895,
@@ -50,6 +61,9 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "nes",
     name: "NES",
+    folders: ["NES"],
+    extensions: ["nes"],
+    coverSystems: ["Nintendo - Nintendo Entertainment System"],
     image: "/cartridges/nes.png",
     overlay: "/cartridges/nes-overlay.png",
     width: 895,
@@ -60,6 +74,9 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "n64",
     name: "Nintendo 64",
+    folders: ["N64"],
+    extensions: ["z64", "n64", "v64"],
+    coverSystems: ["Nintendo - Nintendo 64"],
     image: "/cartridges/n64.png",
     overlay: "/cartridges/n64-overlay.png",
     width: 932,

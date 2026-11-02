@@ -60,6 +60,8 @@ export function Carousel({ config, games, index, floating, onMove }: Props) {
         const offset = circularOffset(i, index, games.length);
         const distance = Math.abs(offset);
         const centered = offset === 0;
+        // Bibliotecas grandes: só existe no DOM o que está perto do centro.
+        if (distance > SLOT_X.length - 1) return null;
         return (
           <motion.button
             key={game.id}
@@ -84,7 +86,7 @@ export function Carousel({ config, games, index, floating, onMove }: Props) {
             }}
           >
             <div className={centered && floating ? "floating" : undefined}>
-              <Cartridge config={config} game={game} priority={distance <= 1} />
+              <Cartridge key={game.cover} config={config} game={game} priority={distance <= 1} />
             </div>
           </motion.button>
         );

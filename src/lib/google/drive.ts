@@ -6,7 +6,7 @@ const UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
 const FOLDER = "application/vnd.google-apps.folder";
 const SETTINGS_FILE = "settings.json";
 
-type DriveFile = { id: string; name: string };
+type DriveFile = { id: string; name: string; mimeType: string };
 
 async function drive(url: string, init: RequestInit = {}) {
   const token = await getAccessToken();
@@ -18,9 +18,20 @@ async function drive(url: string, init: RequestInit = {}) {
   return response;
 }
 
-async function list(query: string): Promise<DriveFile[]> {
-  const params = new URLSearchParams({ q: `${query} and trashed = false`, fields: "files(id,name)", pageSize: "1000" });
-  const { files } = await (await drive(`${API}?${params}`)).json();
+async function list(query: string) {
+  const files: DriveFile[] = [];
+  let pageToken = "";
+  do {
+    const params = new URLSearchParams({
+      q: `${query} and trashed = false`,
+      fields: "nextPageToken,files(id,name,mimeType)",
+      pageSize: "1000",
+      pageToken,
+    });
+    const page = await (await drive(`${API}?${params}`)).json();
+    files.push(...page.files);
+    pageToken = page.nextPageToken ?? "";
+  } while (pageToken);
   return files;
 }
 
@@ -75,7 +86,16 @@ export async function writeSettingsFile(settings: unknown) {
   });
 }
 
-/** Quantos itens o app enxerga na pasta. Zero numa pasta cheia indica que o escopo não cobre o conteúdo. */
-export async function countFolderItems(folderId: string) {
-  return (await list(`'${folderId}' in parents`)).length;
+/** Arquivos da pasta e das subpastas de console, que ficam a um nível, como no RetroArch. */
+export async function listRomFiles(folderId: string) {
+  const items = await list(`'${folderId}' in parents`);
+  const isFolder = (file: DriveFile) => file.mimeType === FOLDER;
+  const nested = await Promise.all(
+    items.filter(isFolder).map(async (folder) => {
+      const files = await list(`'${folder.id}' in parents`);
+      return files.filter((file) => !isFolder(file)).map(({ id, name }) => ({ id, name, folder: folder.name }));
+    }),
+  );
+  const top = items.filter((file) => !isFolder(file)).map(({ id, name }) => ({ id, name, folder: "" }));
+  return [...top, ...nested.flat()];
 }

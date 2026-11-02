@@ -4,9 +4,9 @@ import type { User } from "@supabase/supabase-js";
 import { useEffect, useState, type RefObject } from "react";
 import { ButtonIcon } from "@/components/ui/ButtonIcon";
 import { wrapIndex } from "@/lib/carousel";
-import { countFolderItems } from "@/lib/google/drive";
 import { pickFolder } from "@/lib/google/picker";
 import type { NavAction } from "@/lib/input/useNavigation";
+import { clearLibrary, refreshCovers, scanLibrary, useLibrary } from "@/lib/library/store";
 import type { Theme } from "@/lib/settings/settings";
 import { updateSettings, useSettings, type SyncStatus } from "@/lib/settings/store";
 import { signIn, signOut } from "@/lib/supabase/useUser";
@@ -63,7 +63,9 @@ type Props = {
 export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Props) {
   const settings = useSettings();
   const [tab, setTab] = useState<(typeof TABS)[number]>(TABS[0]);
-  const [folderMessage, setFolderMessage] = useState("");
+  const [folderError, setFolderError] = useState(false);
+  const library = useLibrary();
+  const romsFolderId = settings.romsFolder?.id;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -71,17 +73,22 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
     if (!open && dialog?.open) dialog.close();
   }, [open, dialogRef]);
 
+  const librarySummary = library.scanning
+    ? "Lendo a biblioteca"
+    : library.failed
+      ? "Não foi possível ler a biblioteca"
+      : library.roms
+        ? `${library.roms.length} jogos, ${library.ignored} arquivos ignorados`
+        : "Biblioteca ainda não lida";
+
   async function chooseFolder() {
-    setFolderMessage("");
+    setFolderError(false);
     try {
       const folder = await pickFolder();
-      if (!folder) return;
-      updateSettings({ romsFolder: folder });
-      const count = await countFolderItems(folder.id);
-      setFolderMessage(count ? `${count} itens encontrados na pasta.` : "Nenhum item encontrado na pasta.");
+      if (folder) updateSettings({ romsFolder: folder });
     } catch (error) {
       console.error("Falha ao escolher a pasta:", error);
-      setFolderMessage("Não foi possível abrir a pasta. Tente de novo.");
+      setFolderError(true);
     }
   }
 
@@ -159,7 +166,14 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
                     Reconectar ao Google
                   </button>
                 )}
-                <button type="button" className="settings-action" onClick={signOut}>
+                <button
+                  type="button"
+                  className="settings-action"
+                  onClick={async () => {
+                    await signOut();
+                    clearLibrary();
+                  }}
+                >
                   Sair
                 </button>
               </>
@@ -178,7 +192,20 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
             >
               {settings.romsFolder ? "Trocar pasta" : "Escolher pasta"}
             </button>
-            {folderMessage && <p role="status">{folderMessage}</p>}
+            {folderError && <p role="status">Não foi possível abrir a pasta. Tente de novo.</p>}
+            <p role="status">{librarySummary}</p>
+            <div className="settings-choice">
+              <button
+                type="button"
+                disabled={!user || !romsFolderId || library.scanning}
+                onClick={() => romsFolderId && scanLibrary(romsFolderId)}
+              >
+                Reescanear
+              </button>
+              <button type="button" disabled={!library.roms} onClick={refreshCovers}>
+                Atualizar capas
+              </button>
+            </div>
             <h2>Pasta de saves</h2>
             <p>ArcadeLink/Saves, criada pelo app no seu Drive</p>
           </section>
