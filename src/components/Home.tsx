@@ -1,23 +1,27 @@
 "use client";
 
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import { Carousel } from "@/components/carousel/Carousel";
 import { Miniplayer } from "@/components/miniplayer/Miniplayer";
+import { handlePanelAction, SettingsPanel } from "@/components/settings/SettingsPanel";
 import { TopBar } from "@/components/topbar/TopBar";
 import { ButtonIcon } from "@/components/ui/ButtonIcon";
 import { consoles, type ConsoleId } from "@/config/consoles";
 import { sampleGames } from "@/config/sample-games";
 import { wrapIndex } from "@/lib/carousel";
 import { useNavigation } from "@/lib/input/useNavigation";
-import { cycleTheme, getTheme, subscribeTheme, type Theme } from "@/lib/theme/theme";
-
-const THEME_LABEL: Record<Theme, string> = { system: "Sistema", light: "Claro", dark: "Escuro" };
+import { useDriveSync, useSettings } from "@/lib/settings/store";
+import { useUser } from "@/lib/supabase/useUser";
 
 export function Home() {
   const [consoleIndex, setConsoleIndex] = useState(0);
   const [gameIndexes, setGameIndexes] = useState<Partial<Record<ConsoleId, number>>>({});
-  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => "system" as Theme);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const user = useUser();
+  const syncStatus = useDriveSync(user?.id);
+  const settings = useSettings();
 
   const current = consoles[consoleIndex];
   const games = sampleGames[current.id];
@@ -35,20 +39,23 @@ export function Home() {
   }
 
   useNavigation((action) => {
+    if (dialog.current?.open) return handlePanelAction(dialog.current, action);
     if (action === "left") moveGame(-1);
     if (action === "right") moveGame(1);
     if (action === "l") moveConsole(-1);
     if (action === "r") moveConsole(1);
-    if (action === "y") cycleTheme();
+    if (action === "y") setSettingsOpen(true);
   });
 
   return (
-    <MotionConfig reducedMotion="user">
-      <main className="home">
+    <MotionConfig reducedMotion={settings.reduceMotion ? "always" : "user"}>
+      <main className="home" data-reduce-motion={settings.reduceMotion}>
         <TopBar
           consoleName={current.name}
+          user={user}
           onPreviousConsole={() => moveConsole(-1)}
           onNextConsole={() => moveConsole(1)}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
         <section className="stage" aria-label={`Jogos de ${current.name}`}>
           <AnimatePresence mode="wait" initial={false}>
@@ -60,7 +67,13 @@ export function Home() {
               exit={{ opacity: 0, y: -24 }}
               transition={{ duration: 0.16 }}
             >
-              <Carousel config={current} games={games} index={gameIndex} onMove={moveGame} />
+              <Carousel
+                config={current}
+                games={games}
+                index={gameIndex}
+                floating={settings.floating}
+                onMove={moveGame}
+              />
             </motion.div>
           </AnimatePresence>
         </section>
@@ -69,13 +82,19 @@ export function Home() {
           <span>{games[gameIndex].title}</span>
         </div>
         <footer className="bottombar">
-          {/* shortcut: Y só alterna o tema, vira atalho de ajustes com o painel na etapa 2 (CAR-54) */}
-          <button type="button" className="pill theme-pill" onClick={cycleTheme}>
+          <button type="button" className="pill theme-pill" onClick={() => setSettingsOpen(true)}>
             <ButtonIcon label="Y" />
-            <span>Tema: {THEME_LABEL[theme]}</span>
+            <span>Ajustes</span>
           </button>
           <Miniplayer />
         </footer>
+        <SettingsPanel
+          dialogRef={dialog}
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          user={user}
+          syncStatus={syncStatus}
+        />
       </main>
     </MotionConfig>
   );

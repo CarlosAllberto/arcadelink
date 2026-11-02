@@ -32,4 +32,5 @@ Ao trocar um PNG em `public/cartridges`, apague `.next` antes de testar: o otimi
 - Interface em português do Brasil, sem travessões. "ArcadeLink" para pessoas, `arcadelink` em identificadores.
 - Consoles e áreas de capa ficam só em `src/config/consoles.ts`.
 - CSS puro com variáveis em `src/styles/theme.css`, sem Tailwind.
+- Migrações ficam em `supabase/migrations/`. Toda tabela nova precisa de RLS e `grant` explícito.
 - Exportações pelo MCP do Figma saem achatadas sobre o fundo da página. Para transparência real, exporte sobre dois fundos e recupere o alfa pela diferença.

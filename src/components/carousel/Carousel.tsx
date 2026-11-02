@@ -17,10 +17,11 @@ type Props = {
   config: ConsoleConfig;
   games: Game[];
   index: number;
+  floating: boolean;
   onMove: (delta: number) => void;
 };
 
-export function Carousel({ config, games, index, onMove }: Props) {
+export function Carousel({ config, games, index, floating, onMove }: Props) {
   const wheel = useRef({ total: 0, lockedUntil: 0 });
   const dragging = useRef(false);
 
@@ -82,7 +83,7 @@ export function Carousel({ config, games, index, onMove }: Props) {
               if (!dragging.current && !centered) onMove(offset);
             }}
           >
-            <div className={centered ? "floating" : undefined}>
+            <div className={centered && floating ? "floating" : undefined}>
               <Cartridge config={config} game={game} priority={distance <= 1} />
             </div>
           </motion.button>

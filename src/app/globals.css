@@ -283,6 +283,123 @@ button:focus-visible {
   }
 }
 
+.round-button {
+  overflow: hidden;
+}
+
+.home[data-reduce-motion="true"] .miniplayer-title-on,
+.home[data-reduce-motion="true"] .equalizer-on i {
+  animation: none;
+}
+
+.settings {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--pill-border);
+  border-radius: 24px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  background: var(--pill-bg);
+  box-shadow: var(--pill-shadow);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.settings::backdrop {
+  background: rgb(0 0 0 / 0.35);
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.settings-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.settings-tabs button[aria-selected="true"] {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 220px;
+}
+
+.settings-section h2 {
+  margin: 4px 0 0;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.settings-section p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 32px;
+}
+
+.settings-row input {
+  accent-color: var(--text);
+}
+
+.settings input:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.settings-choice {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-choice button,
+.settings-action {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--text);
+  border-radius: 999px;
+}
+
+.settings-choice button[aria-pressed="true"] {
+  color: var(--icon-text);
+  background: var(--icon-bg);
+}
+
+.settings-action {
+  align-self: flex-start;
+}
+
+.settings-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.settings-close {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: 8px;
+}
+
 @media (max-width: 700px) {
   .topbar-clock {
     min-width: 0;
@@ -293,10 +410,6 @@ button:focus-visible {
   .console-name {
     min-width: 0;
     font-size: 12px;
-  }
-
-  .topbar-right .round-button:first-child {
-    display: none;
   }
 
   .theme-pill span:last-child {

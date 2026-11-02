@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { playlist } from "@/lib/playlist";
+import { useSettings } from "@/lib/settings/store";
 
 const PAUSED_KEY = "arcadelink:music-paused";
 
@@ -26,7 +27,12 @@ export function Miniplayer() {
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const { musicVolume } = useSettings();
   const track = playlist[trackIndex];
+
+  useEffect(() => {
+    if (audio.current) audio.current.volume = musicVolume / 100;
+  }, [musicVolume]);
 
   useEffect(() => {
     // O navegador bloqueia áudio até o primeiro gesto na página.
