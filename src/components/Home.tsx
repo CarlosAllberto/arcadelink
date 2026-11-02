@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { Carousel } from "@/components/carousel/Carousel";
 import { Miniplayer } from "@/components/miniplayer/Miniplayer";
@@ -38,6 +39,7 @@ export function Home() {
   const [gameIndexes, setGameIndexes] = useState<Partial<Record<ConsoleId, number>>>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
+  const router = useRouter();
   const user = useUser();
   const syncStatus = useDriveSync(user?.id);
   const settings = useSettings();
@@ -61,6 +63,12 @@ export function Home() {
     setConsoleIndex((index) => wrapIndex(index + delta, consoles.length));
   }
 
+  function play() {
+    // Só jogos reais têm capa reserva; exemplos e consoles vazios não abrem.
+    const game = games[gameIndex];
+    if (game.fallback) router.push(`/play/${game.id}`);
+  }
+
   useNavigation((action) => {
     if (dialog.current?.open) return handlePanelAction(dialog.current, action);
     if (action === "left") moveGame(-1);
@@ -68,6 +76,7 @@ export function Home() {
     if (action === "l") moveConsole(-1);
     if (action === "r") moveConsole(1);
     if (action === "y") setSettingsOpen(true);
+    if (action === "a") play();
   });
 
   return (
@@ -96,14 +105,15 @@ export function Home() {
                 index={gameIndex}
                 floating={settings.floating}
                 onMove={moveGame}
+                onPlay={play}
               />
             </motion.div>
           </AnimatePresence>
         </section>
-        <div className="pill game-title" aria-live="polite">
+        <button type="button" className="pill game-title" aria-live="polite" onClick={play}>
           <ButtonIcon label="A" />
           <span>{games[gameIndex].title}</span>
-        </div>
+        </button>
         <footer className="bottombar">
           <button type="button" className="pill theme-pill" onClick={() => setSettingsOpen(true)}>
             <ButtonIcon label="Y" />

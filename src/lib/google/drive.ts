@@ -44,24 +44,34 @@ async function create(name: string, parent: string, mimeType: string): Promise<D
   return response.json();
 }
 
+function byName(name: string, parent: string) {
+  const escaped = name.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  return list(`name = '${escaped}' and '${parent}' in parents`);
+}
+
 async function findOrCreate(name: string, parent: string, mimeType: string) {
-  const [found] = await list(`name = '${name}' and '${parent}' in parents`);
+  const [found] = await byName(name, parent);
   return found ?? create(name, parent, mimeType);
 }
 
-let appFolders: Promise<{ app: DriveFile; roms: DriveFile }> | null = null;
+async function createConsoleFolders(parent: string) {
+  const existing = (await list(`'${parent}' in parents`)).map((file) => file.name);
+  for (const name of romFolders) {
+    if (!existing.includes(name)) await create(name, parent, FOLDER);
+  }
+}
 
-/** `ArcadeLink/` com `Saves/` e `Roms/<console>/`. Criadas pelo app, ficam cobertas pelo `drive.file`. */
+let appFolders: Promise<{ app: DriveFile; roms: DriveFile; saves: DriveFile }> | null = null;
+
+/** `ArcadeLink/` com `Saves/<console>/` e `Roms/<console>/`. Criadas pelo app, ficam cobertas pelo `drive.file`. */
 export function getAppFolders() {
   appFolders ??= (async () => {
     const app = await findOrCreate("ArcadeLink", "root", FOLDER);
-    await findOrCreate("Saves", app.id, FOLDER);
+    const saves = await findOrCreate("Saves", app.id, FOLDER);
     const roms = await findOrCreate("Roms", app.id, FOLDER);
-    const existing = (await list(`'${roms.id}' in parents`)).map((file) => file.name);
-    for (const name of romFolders) {
-      if (!existing.includes(name)) await create(name, roms.id, FOLDER);
-    }
-    return { app, roms };
+    await createConsoleFolders(roms.id);
+    await createConsoleFolders(saves.id);
+    return { app, roms, saves };
   })().catch((error) => {
     appFolders = null;
     throw error;
@@ -71,7 +81,7 @@ export function getAppFolders() {
 
 export async function readSettingsFile(): Promise<unknown | null> {
   const { id } = (await getAppFolders()).app;
-  const [file] = await list(`name = '${SETTINGS_FILE}' and '${id}' in parents`);
+  const [file] = await byName(SETTINGS_FILE, id);
   if (!file) return null;
   return (await drive(`${API}/${file.id}?alt=media`)).json();
 }
@@ -98,4 +108,48 @@ export async function listRomFiles(folderId: string) {
   );
   const top = items.filter((file) => !isFolder(file)).map(({ id, name }) => ({ id, name, folder: "" }));
   return [...top, ...nested.flat()];
+}
+
+/** Baixa a ROM para a memória. O site nunca guarda a ROM em lugar nenhum. */
+export async function downloadRom(id: string, name: string, onProgress: (percent: number) => void) {
+  const { size } = await (await drive(`${API}/${id}?fields=size`)).json();
+  const response = await drive(`${API}/${id}?alt=media`);
+  const reader = response.body!.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    onProgress(Math.min(100, Math.round((received / Number(size)) * 100)));
+  }
+  return new File(chunks as BlobPart[], name);
+}
+
+async function saveFolder(folder: string) {
+  const { saves } = await getAppFolders();
+  return { saves, target: await findOrCreate(folder, saves.id, FOLDER) };
+}
+
+/** Saves antigos ficavam soltos em `Saves/`: ao achar um, move para a pasta do console. */
+export async function readSaveFile(name: string, folder: string) {
+  const { saves, target } = await saveFolder(folder);
+  let [file] = await byName(name, target.id);
+  if (!file) {
+    [file] = await byName(name, saves.id);
+    if (!file) return null;
+    await drive(`${API}/${file.id}?addParents=${target.id}&removeParents=${saves.id}`, { method: "PATCH" });
+  }
+  return new Uint8Array(await (await drive(`${API}/${file.id}?alt=media`)).arrayBuffer());
+}
+
+export async function writeSaveFile(name: string, folder: string, data: Uint8Array) {
+  const { target } = await saveFolder(folder);
+  const file = await findOrCreate(name, target.id, "application/octet-stream");
+  await drive(`${UPLOAD}/${file.id}?uploadType=media`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: new Blob([data as BlobPart]),
+  });
 }

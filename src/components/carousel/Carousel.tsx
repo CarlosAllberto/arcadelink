@@ -19,9 +19,10 @@ type Props = {
   index: number;
   floating: boolean;
   onMove: (delta: number) => void;
+  onPlay: () => void;
 };
 
-export function Carousel({ config, games, index, floating, onMove }: Props) {
+export function Carousel({ config, games, index, floating, onMove, onPlay }: Props) {
   const wheel = useRef({ total: 0, lockedUntil: 0 });
   const dragging = useRef(false);
 
@@ -82,7 +83,9 @@ export function Carousel({ config, games, index, floating, onMove }: Props) {
             }}
             transition={spring}
             onClick={() => {
-              if (!dragging.current && !centered) onMove(offset);
+              if (dragging.current) return;
+              if (centered) onPlay();
+              else onMove(offset);
             }}
           >
             <div className={centered && floating ? "floating" : undefined}>

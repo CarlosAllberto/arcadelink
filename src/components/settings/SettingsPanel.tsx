@@ -3,6 +3,7 @@
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useState, type RefObject } from "react";
 import { ButtonIcon } from "@/components/ui/ButtonIcon";
+import { ControlsSection, SavesSection, VideoSection } from "./GameSections";
 import { wrapIndex } from "@/lib/carousel";
 import { pickFolder } from "@/lib/google/picker";
 import type { NavAction } from "@/lib/input/useNavigation";
@@ -11,7 +12,7 @@ import type { Theme } from "@/lib/settings/settings";
 import { updateSettings, useSettings, type SyncStatus } from "@/lib/settings/store";
 import { signIn, signOut } from "@/lib/supabase/useUser";
 
-const TABS = ["Aparência", "Biblioteca", "Áudio"] as const;
+const TABS = ["Aparência", "Biblioteca", "Áudio", "Controles", "Vídeo", "Saves"] as const;
 const THEMES: { value: Theme; label: string }[] = [
   { value: "system", label: "Sistema" },
   { value: "light", label: "Claro" },
@@ -47,7 +48,13 @@ export function handlePanelAction(dialog: HTMLDialogElement, action: NavAction) 
     return;
   }
 
-  const items = [...dialog.querySelectorAll<HTMLElement>("button:not(:disabled), input")];
+  if (active instanceof HTMLSelectElement && (action === "left" || action === "right")) {
+    active.selectedIndex = wrapIndex(active.selectedIndex + (action === "right" ? 1 : -1), active.options.length);
+    active.dispatchEvent(new Event("change", { bubbles: true }));
+    return;
+  }
+
+  const items = [...dialog.querySelectorAll<HTMLElement>("button:not(:disabled), input, select")];
   const delta = action === "up" || action === "left" ? -1 : 1;
   items[wrapIndex(items.indexOf(active as HTMLElement) + delta, items.length)]?.focus();
 }
@@ -207,7 +214,7 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
               </button>
             </div>
             <h2>Pasta de saves</h2>
-            <p>ArcadeLink/Saves, criada pelo app no seu Drive</p>
+            <p>ArcadeLink/Saves, com uma pasta por console</p>
           </section>
         )}
 
@@ -237,6 +244,10 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
             </label>
           </section>
         )}
+
+        {tab === "Controles" && <ControlsSection />}
+        {tab === "Vídeo" && <VideoSection />}
+        {tab === "Saves" && <SavesSection />}
 
         <button type="button" className="settings-close" onClick={() => dialogRef.current?.close()}>
           <ButtonIcon label="B" />

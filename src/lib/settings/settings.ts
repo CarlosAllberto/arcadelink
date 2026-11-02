@@ -4,7 +4,12 @@ export type Theme = "system" | "light" | "dark";
 export type Folder = { id: string; name: string };
 
 /** Valores que um console pode sobrescrever. */
-type ConsoleSettings = { gameVolume: number };
+type ConsoleSettings = { gameVolume: number; shader: string };
+
+/** Botão do jogo: tecla (keyCode e rótulo) e botão do gamepad, nos nomes do EmulatorJS. */
+export type ControlBinding = { keyCode?: number; key?: string; pad?: string };
+/** Jogador, índice do botão no RetroPad, atalho. */
+export type Controls = Record<number, Record<number, ControlBinding>>;
 
 export type Settings = ConsoleSettings & {
   theme: Theme;
@@ -12,6 +17,12 @@ export type Settings = ConsoleSettings & {
   floating: boolean;
   musicVolume: number;
   romsFolder: Folder | null;
+  /** Minutos entre envios do save de bateria; 0 envia só ao pausar ou sair. */
+  saveInterval: number;
+  autoStateOnExit: boolean;
+  controls: Controls;
+  /** Tecla de cada ação do menu, quando diferente do padrão. */
+  menuKeys: Record<string, string>;
   consoles: Partial<Record<ConsoleId, Partial<ConsoleSettings>>>;
   updatedAt: number;
 };
@@ -21,8 +32,13 @@ export const defaultSettings: Settings = {
   reduceMotion: false,
   floating: true,
   gameVolume: 80,
+  shader: "disabled",
   musicVolume: 50,
   romsFolder: null,
+  saveInterval: 5,
+  autoStateOnExit: true,
+  controls: {},
+  menuKeys: {},
   consoles: {},
   updatedAt: 0,
 };
@@ -35,6 +51,14 @@ function flag(value: unknown, fallback: boolean) {
   return typeof value === "boolean" ? value : fallback;
 }
 
+function text(value: unknown, fallback: string) {
+  return typeof value === "string" ? value : fallback;
+}
+
+function record<T>(value: unknown) {
+  return (value && typeof value === "object" ? value : {}) as T;
+}
+
 function folder(value: unknown) {
   const { id, name } = (value ?? {}) as Partial<Folder>;
   return typeof id === "string" && typeof name === "string" ? { id, name } : null;
@@ -43,15 +67,19 @@ function folder(value: unknown) {
 /** Aceita o que vier do localStorage ou do Drive: campo inválido cai no padrão. */
 export function parseSettings(raw: unknown): Settings {
   const value = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  const consoles = (value.consoles && typeof value.consoles === "object" ? value.consoles : {}) as Settings["consoles"];
   return {
     theme: value.theme === "light" || value.theme === "dark" ? value.theme : "system",
     reduceMotion: flag(value.reduceMotion, defaultSettings.reduceMotion),
     floating: flag(value.floating, defaultSettings.floating),
     gameVolume: volume(value.gameVolume, defaultSettings.gameVolume),
     musicVolume: volume(value.musicVolume, defaultSettings.musicVolume),
+    shader: text(value.shader, defaultSettings.shader),
     romsFolder: folder(value.romsFolder),
-    consoles,
+    saveInterval: volume(value.saveInterval, defaultSettings.saveInterval),
+    autoStateOnExit: flag(value.autoStateOnExit, defaultSettings.autoStateOnExit),
+    controls: record<Controls>(value.controls),
+    menuKeys: record<Settings["menuKeys"]>(value.menuKeys),
+    consoles: record<Settings["consoles"]>(value.consoles),
     updatedAt: typeof value.updatedAt === "number" ? value.updatedAt : 0,
   };
 }
@@ -61,5 +89,6 @@ export function newerSettings(local: Settings, remote: Settings) {
 }
 
 export function settingsForConsole(settings: Settings, id: ConsoleId): ConsoleSettings {
-  return { gameVolume: volume(settings.consoles[id]?.gameVolume, settings.gameVolume) };
+  const own = settings.consoles[id];
+  return { gameVolume: volume(own?.gameVolume, settings.gameVolume), shader: text(own?.shader, settings.shader) };
 }

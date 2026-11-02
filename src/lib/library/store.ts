@@ -38,6 +38,10 @@ function commit(patch: Partial<Library>) {
   listeners.forEach((listener) => listener());
 }
 
+export function getRom(id: string) {
+  return current().roms?.find((rom) => rom.id === id);
+}
+
 export async function scanLibrary(folderId: string) {
   commit({ scanning: true, failed: false });
   try {

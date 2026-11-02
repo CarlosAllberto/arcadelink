@@ -320,6 +320,7 @@ button:focus-visible {
 
 .settings-tabs {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 12px;
@@ -368,7 +369,90 @@ button:focus-visible {
 
 .settings-choice {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.settings select {
+  max-width: 55%;
+  color: inherit;
+  font: inherit;
+  background: none;
+}
+
+.settings select:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-bindings {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-bindings button {
+  overflow: hidden;
+  width: 92px;
+  padding: 4px 8px;
+  border: 1px solid var(--text);
+  border-radius: 8px;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  background: #000;
+}
+
+#game {
+  width: 100%;
+  height: 100%;
+}
+
+.player-exit,
+.player-warning {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  z-index: 10;
+  margin: 0;
+}
+
+.player-exit {
+  left: 12px;
+}
+
+.player-warning {
+  right: 12px;
+}
+
+.player-status {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  color: #fff;
+  text-align: center;
+  background: rgb(0 0 0 / 0.72);
+}
+
+.player-status .settings-action {
+  align-self: center;
+  border-color: #fff;
 }
 
 .settings-choice button:disabled {

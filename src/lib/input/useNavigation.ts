@@ -1,19 +1,30 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getSettings } from "@/lib/settings/store";
+import { isCapturing } from "./capture";
 
 export type NavAction = "left" | "right" | "up" | "down" | "l" | "r" | "y" | "a" | "b";
 
-// A e B só no gamepad: no teclado, Enter e Esc já funcionam nos botões e no painel.
-const KEYS: Record<string, NavAction> = {
-  ArrowLeft: "left",
-  ArrowRight: "right",
-  ArrowUp: "up",
-  ArrowDown: "down",
+// B só no gamepad: no teclado, Esc já fecha o painel.
+export const MENU_KEYS: Record<string, NavAction> = {
+  arrowleft: "left",
+  arrowright: "right",
+  arrowup: "up",
+  arrowdown: "down",
   q: "l",
   e: "r",
   y: "y",
+  enter: "a",
 };
+
+function actionForKey(key: string) {
+  const { menuKeys } = getSettings();
+  const custom = Object.keys(menuKeys).find((action) => menuKeys[action] === key);
+  if (custom) return custom as NavAction;
+  const action = MENU_KEYS[key];
+  return action && !menuKeys[action] ? action : undefined;
+}
 
 const REPEATING: NavAction[] = ["left", "right", "up", "down"];
 const REPEAT_DELAY = 350;
@@ -44,8 +55,8 @@ export function useNavigation(onAction: (action: NavAction) => void) {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      const action = KEYS[event.key] ?? KEYS[event.key.toLowerCase()];
+      if (isCapturing() || event.metaKey || event.ctrlKey || event.altKey) return;
+      const action = actionForKey(event.key.toLowerCase());
       if (!action) return;
       event.preventDefault();
       if (!event.repeat || REPEATING.includes(action)) handler.current(action);
@@ -55,7 +66,7 @@ export function useNavigation(onAction: (action: NavAction) => void) {
     let frame = 0;
     function poll(now: number) {
       for (const pad of navigator.getGamepads()) {
-        if (!pad) continue;
+        if (!pad || isCapturing()) continue;
         const state = readPad(pad);
         for (const action of Object.keys(state) as NavAction[]) {
           const key = `${pad.index}:${action}`;

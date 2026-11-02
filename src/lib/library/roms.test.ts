@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { classifyRoms, consoleForRom, coverKey, dominantColor, pickCover, romTitle } from "./roms.ts";
+import { classifyRoms, consoleForRom, coverKey, dominantColor, pickCover, romTitle, saveFolderFor } from "./roms.ts";
 
 test("romTitle limpa os nomes reais da biblioteca", () => {
   assert.equal(romTitle("Super Mario World (PT-BR) - [snesforever.com.br].sfc"), "Super Mario World");
@@ -54,4 +54,11 @@ test("dominantColor pesa os pixels saturados e aguenta imagem vazia", () => {
   const color = dominantColor([255, 0, 0, 255, 128, 128, 128, 255]);
   assert.ok(color?.startsWith("rgb(25"), color ?? "");
   assert.equal(dominantColor([0, 0, 0, 0]), null);
+});
+
+test("saveFolderFor separa GBC de GB e usa a pasta principal nos demais", () => {
+  assert.equal(saveFolderFor("a.gbc", ["GB", "GBC"]), "GBC");
+  assert.equal(saveFolderFor("a.gb", ["GB", "GBC"]), "GB");
+  assert.equal(saveFolderFor("a.zip", ["GB", "GBC"]), "GB");
+  assert.equal(saveFolderFor("a.sfc", ["SNES"]), "SNES");
 });

@@ -33,6 +33,8 @@ function commit(next: Settings) {
   listeners.forEach((listener) => listener());
 }
 
+export const getSettings = current;
+
 export function updateSettings(patch: Partial<Settings>) {
   commit({ ...current(), ...patch, updatedAt: Date.now() });
 }

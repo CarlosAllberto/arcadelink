@@ -27,4 +27,7 @@ test("settingsForConsole usa o valor do console quando existe", () => {
   const settings = { ...defaultSettings, gameVolume: 40, consoles: { snes: { gameVolume: 90 } } };
   assert.equal(settingsForConsole(settings, "snes").gameVolume, 90);
   assert.equal(settingsForConsole(settings, "gb").gameVolume, 40);
+  const crt = { ...defaultSettings, consoles: { snes: { shader: "crt-geom.glslp" } } };
+  assert.equal(settingsForConsole(crt, "snes").shader, "crt-geom.glslp");
+  assert.equal(settingsForConsole(crt, "gb").shader, "disabled");
 });

@@ -10,6 +10,8 @@ export type ConsoleConfig = {
   extensions: string[];
   /** Sistemas na base libretro-thumbnails. */
   coverSystems: string[];
+  /** Valor de `EJS_core` no EmulatorJS. */
+  core: string;
   image: string;
   /** Logo e selos da etiqueta, que ficam por cima da capa. */
   overlay: string;
@@ -31,6 +33,7 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "gb",
     name: "Game Boy",
+    core: "gb",
     folders: ["GB", "GBC"],
     extensions: ["gb", "gbc"],
     coverSystems: ["Nintendo - Game Boy", "Nintendo - Game Boy Color"],
@@ -44,6 +47,7 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "snes",
     name: "SNES",
+    core: "snes",
     folders: ["SNES"],
     extensions: ["sfc", "smc"],
     coverSystems: ["Nintendo - Super Nintendo Entertainment System"],
@@ -61,6 +65,7 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "nes",
     name: "NES",
+    core: "nes",
     folders: ["NES"],
     extensions: ["nes"],
     coverSystems: ["Nintendo - Nintendo Entertainment System"],
@@ -74,6 +79,7 @@ export const consoles: ConsoleConfig[] = [
   {
     id: "n64",
     name: "Nintendo 64",
+    core: "n64",
     folders: ["N64"],
     extensions: ["z64", "n64", "v64"],
     coverSystems: ["Nintendo - Nintendo 64"],

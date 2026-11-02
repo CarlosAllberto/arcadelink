@@ -66,6 +66,12 @@ export function consoleForRom(fileName: string, folder: string): ConsoleId | nul
   return ARCHIVES.includes(ext) ? (consoleByFolder(folder)?.id ?? null) : null;
 }
 
+/** Subpasta dos saves: a da extensão, como GBC, ou a principal do console. */
+export function saveFolderFor(fileName: string, folders: string[]) {
+  const ext = extension(fileName).toUpperCase();
+  return folders.includes(ext) ? ext : folders[0];
+}
+
 /** Separa o que entra no carrossel do que é ignorado, como `.md` ou ROMs de GBA. */
 export function classifyRoms(files: RomFile[]) {
   const roms: Rom[] = [];
