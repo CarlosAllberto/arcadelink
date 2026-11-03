@@ -4,22 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { playlist } from "@/lib/playlist";
 import { useSettings } from "@/lib/settings/store";
 
-const PAUSED_KEY = "arcadelink:music-paused";
-
-function readPaused() {
-  try {
-    return localStorage.getItem(PAUSED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writePaused(paused: boolean) {
-  try {
-    localStorage.setItem(PAUSED_KEY, paused ? "1" : "0");
-  } catch {}
-}
-
 export function Miniplayer() {
   const root = useRef<HTMLDivElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
@@ -39,7 +23,7 @@ export function Miniplayer() {
     function start(event: Event) {
       window.removeEventListener("pointerdown", start);
       window.removeEventListener("keydown", start);
-      if (root.current?.contains(event.target as Node) || readPaused()) return;
+      if (root.current?.contains(event.target as Node)) return;
       audio.current?.play().catch(() => {});
     }
     window.addEventListener("pointerdown", start);
@@ -57,7 +41,6 @@ export function Miniplayer() {
   function togglePlay() {
     const element = audio.current;
     if (!element) return;
-    writePaused(!element.paused);
     if (element.paused) element.play().catch(() => {});
     else element.pause();
   }

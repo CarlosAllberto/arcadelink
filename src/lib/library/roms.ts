@@ -19,6 +19,8 @@ function extension(name: string) {
 function withoutTags(name: string) {
   return name
     .replace(/\.[a-z0-9]{1,4}$/i, "")
+    // Numeração de coleções, como "0997 - Castlevania". Anos ficam, por causa de "1943 - The Battle of Midway".
+    .replace(/^(?!19\d\d|20\d\d)\d{3,4}\s*-\s*/, "")
     .replace(/_/g, " ")
     .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
     .replace(/\s+/g, " ")

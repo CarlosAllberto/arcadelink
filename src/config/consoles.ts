@@ -103,10 +103,11 @@ export const consoles: ConsoleConfig[] = [
     overlay: "/cartridges/n64-overlay.png",
     width: 932,
     height: 637,
-    cover: { x: 213, y: 54, width: 506, height: 527 },
+    // A arte ocupa o topo da etiqueta na proporção da caixa (deitada); embaixo, faixa na cor da capa.
+    cover: { x: 213, y: 54, width: 506, height: 354 },
     // A etiqueta do N64 tem o topo em arco, não cantos arredondados.
-    coverClip:
-      "polygon(0 4%, 15% 1.7%, 30% 0.5%, 50% 0, 70% 0.5%, 85% 1.7%, 100% 4%, 100% 100%, 0 100%)",
+    coverClip: "polygon(0 6%, 15% 2.5%, 30% 0.75%, 50% 0, 70% 0.75%, 85% 2.5%, 100% 6%, 100% 100%, 0 100%)",
+    labelStrips: [{ x: 213, y: 408, width: 506, height: 173, radius: "0 0 10px 10px" }],
     gloss: true,
   },
   {
@@ -120,9 +121,12 @@ export const consoles: ConsoleConfig[] = [
     overlay: "/cartridges/gba-overlay.png",
     width: 520,
     height: 400,
-    // Abaixo da faixa DESIGN BOY ADVANCE; capas de GBA são quadradas e trazem o título no topo.
-    cover: { x: 32, y: 116, width: 456, height: 256 },
-    coverPosition: "top",
+    // Abaixo da faixa DESIGN BOY ADVANCE: arte quadrada no meio, como a caixa, entre colunas na cor da capa.
+    cover: { x: 132, y: 116, width: 256, height: 256 },
+    labelStrips: [
+      { x: 32, y: 116, width: 100, height: 256, radius: "0 0 0 8px" },
+      { x: 388, y: 116, width: 100, height: 256, radius: "0 0 8px 0" },
+    ],
     gloss: true,
   },
   {

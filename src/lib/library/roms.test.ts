@@ -10,6 +10,8 @@ test("romTitle limpa os nomes reais da biblioteca", () => {
     "The Legend of Zelda - A Link to the Past",
   );
   assert.equal(romTitle("super_metroid.smc"), "super metroid");
+  assert.equal(romTitle("0997 - Castlevania - Aria of Sorrow (E)(Eurasia).gba"), "Castlevania - Aria of Sorrow");
+  assert.equal(romTitle("1943 - The Battle of Midway (USA).nes"), "1943 - The Battle of Midway");
   assert.equal(romTitle("kf2k2mp2.zip"), "The King of Fighters 2002 Magic Plus II");
   assert.equal(coverTitle("kf2k2mp2.zip"), "The King of Fighters 2002");
   assert.equal(coverTitle("Sonic (USA).md"), romTitle("Sonic (USA).md"));

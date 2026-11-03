@@ -51,7 +51,14 @@ function saveNow(emulator: Emulator, saves: ReturnType<typeof createSaveQueue>, 
   const { gameManager } = emulator;
   const battery = gameManager.getSaveFile();
   if (battery) saves.battery(battery);
-  if (withState && gameManager.supportsStates()) saves.state(gameManager.getState());
+  if (!withState || !gameManager.supportsStates()) return;
+  try {
+    saves.state(gameManager.getState());
+  } catch (error) {
+    // O core lança "Size is zero" enquanto ainda não tem estado, como logo após abrir o jogo.
+    // Sem state, o save de bateria segue e a saída não pode travar por isso.
+    console.warn("Save state indisponível agora:", error);
+  }
 }
 
 export function Player({ romId }: { romId: string }) {
