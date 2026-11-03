@@ -37,14 +37,14 @@ ArcadeLink is a personal retro gaming site. Sign in with Google, drop your ROMs 
 
 - **Your Drive is the library:** ROMs live in `ArcadeLink/Roms/<console>`, the same layout RetroArch uses. The site never stores them on a server.
 - **Saves everywhere:** battery saves and save states are written to `ArcadeLink/Saves/<console>` when you pause, exit or switch tabs, and on a timer you choose.
-- **Cartridge carousel:** real cartridge mockups for SNES, NES, N64 and Game Boy, with the game cover printed on the label. Other consoles use a generic box.
+- **Cartridge carousel:** a mockup for every console, with the game cover printed on the label: cartridges, a DS card, a HuCard and a CD case for PlayStation. Arcade uses a plain box that follows the cover.
 - **Automatic covers:** box art comes from [libretro-thumbnails](https://github.com/libretro-thumbnails), even for messy file names like `Super Mario World (PT-BR) - [site].sfc`.
 - **Keyboard, mouse, touch and gamepad:** the whole home screen and the settings panel work with a controller.
 - **Fast reopen:** after the first launch, a game opens in about a second, since the ROM is cached in your browser.
 - **Light and dark themes**, a random game button, and a mini player with original 8-bit tracks.
 
 <p align="center">
-  <img src="docs/screenshots/home-gba.jpg" alt="Game Boy Advance games in the generic box" width="49%">
+  <img src="docs/screenshots/home-gba.jpg" alt="Game Boy Advance cartridges" width="49%">
   <img src="docs/screenshots/home-dark.jpg" alt="Dark theme on the NES shelf" width="49%">
 </p>
 
@@ -65,8 +65,7 @@ Put each ROM in the matching folder inside `ArcadeLink/Roms`. The folders are cr
 | Nintendo DS | `NDS` | `.nds` |
 | PlayStation | `PSX` | `.chd` `.pbp` `.iso` `.bin` `.cue` |
 | PC Engine | `PCE` | `.pce` |
-| MAME (2003-plus romsets) | `MAME` | `.zip` `.7z` |
-| Arcade (FBNeo romsets) | `ARCADE` | `.zip` `.7z` |
+| Arcade | `ARCADE` (FBNeo romsets) or `MAME` (MAME 2003-plus romsets) | `.zip` `.7z` |
 
 `.zip` and `.7z` work in every folder. Shared extensions such as `.bin` only count inside their console folder.
 

@@ -25,8 +25,9 @@ export function Cartridge({ config, game, priority }: { config: ConsoleConfig; g
   function onCoverLoad(event: SyntheticEvent<HTMLImageElement>) {
     const image = event.currentTarget;
     if (config.labelStrips) setLabelColor(coverColor(image) ?? game.color);
-    // Sem mockup, a caixa segue a capa, mas sempre em pé: arte larga é recortada nas laterais.
-    if (!config.image) setRatio(Math.min(image.naturalWidth / image.naturalHeight, width / height));
+    // Sem mockup, a caixa segue a capa (descontada a margem), mas sempre em pé: arte larga é recortada.
+    const coverRatio = image.naturalWidth / image.naturalHeight;
+    if (!config.image) setRatio(Math.min((coverRatio * cover.height) / height / (cover.width / width), width / height));
   }
   const place = (area: { x: number; y: number; width: number; height: number }) => ({
     left: `${(area.x / width) * 100}%`,
@@ -65,6 +66,7 @@ export function Cartridge({ config, game, priority }: { config: ConsoleConfig; g
           fill
           unoptimized
           draggable={false}
+          style={{ objectPosition: config.coverPosition }}
           onLoad={onCoverLoad}
           onError={() => setFailed(true)}
         />

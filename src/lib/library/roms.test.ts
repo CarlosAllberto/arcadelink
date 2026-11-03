@@ -52,7 +52,7 @@ test("consoleForRom usa extensão e, em zip, a subpasta", () => {
   assert.equal(consoleForRom("a.zip", "GBA"), "gba");
   assert.equal(consoleForRom("a.gba", "GBA"), "gba");
   assert.equal(consoleForRom("a.md", "MD"), "md");
-  assert.equal(consoleForRom("a.zip", "MAME"), "mame");
+  assert.equal(consoleForRom("a.zip", "MAME"), "arcade");
   assert.equal(consoleForRom("a.zip", "ARCADE"), "arcade");
   assert.equal(consoleForRom("a.bin", "MD"), "md");
   assert.equal(consoleForRom("a.bin", "PSX"), "psx");
@@ -68,6 +68,7 @@ test("classifyRoms conta os ignorados e ordena por título", () => {
     { id: "3", name: "Aladdin.sfc", folder: "SNES" },
   ]);
   assert.deepEqual(roms.map((rom) => rom.id), ["3", "1"]);
+  assert.equal(roms[0].folder, "SNES");
   assert.equal(ignored, 1);
 });
 

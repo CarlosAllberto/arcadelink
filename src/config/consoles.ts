@@ -10,7 +10,6 @@ export type ConsoleId =
   | "nds"
   | "psx"
   | "pce"
-  | "mame"
   | "arcade";
 
 type Area = { x: number; y: number; width: number; height: number };
@@ -27,7 +26,9 @@ export type ConsoleConfig = {
   coverSystems: string[];
   /** Valor de `EJS_core` no EmulatorJS. */
   core: string;
-  /** Sem mockup, `image` e `overlay` ficam vazios e o cartucho vira uma caixa genérica. */
+  /** Core de uma subpasta específica, quando difere do padrão do console. */
+  folderCores?: Record<string, string>;
+  /** Sem `image` e `overlay`, o cartucho vira uma caixa genérica que segue a proporção da capa. */
   image?: string;
   /** Logo e selos da etiqueta, que ficam por cima da capa. */
   overlay?: string;
@@ -36,13 +37,12 @@ export type ConsoleConfig = {
   height: number;
   cover: Area;
   coverClip?: string;
+  /** Onde ancorar o corte da capa; o padrão é o centro. */
+  coverPosition?: string;
   gloss: boolean;
   /** Faixas da etiqueta pintadas com a cor dominante da capa. */
   labelStrips?: (Area & { radius: string })[];
 };
-
-/** Medidas da caixa genérica, para consoles ainda sem mockup de cartucho. */
-const box = { width: 460, height: 620, cover: { x: 20, y: 20, width: 420, height: 580 }, gloss: true };
 
 // Para adicionar um console: exporte os PNGs para public/cartridges e inclua um item aqui.
 export const consoles: ConsoleConfig[] = [
@@ -116,7 +116,14 @@ export const consoles: ConsoleConfig[] = [
     folders: ["GBA"],
     extensions: ["gba"],
     coverSystems: ["Nintendo - Game Boy Advance"],
-    ...box,
+    image: "/cartridges/gba.png",
+    overlay: "/cartridges/gba-overlay.png",
+    width: 520,
+    height: 400,
+    // Abaixo da faixa DESIGN BOY ADVANCE; capas de GBA são quadradas e trazem o título no topo.
+    cover: { x: 32, y: 116, width: 456, height: 256 },
+    coverPosition: "top",
+    gloss: true,
   },
   {
     id: "md",
@@ -126,7 +133,14 @@ export const consoles: ConsoleConfig[] = [
     extensions: ["gen", "smd", "md"],
     folderExtensions: ["bin"],
     coverSystems: ["Sega - Mega Drive - Genesis"],
-    ...box,
+    image: "/cartridges/md.png",
+    overlay: "/cartridges/md-overlay.png",
+    width: 440,
+    height: 640,
+    // Abaixo da faixa MEGA DESIGN; capas de Mega Drive são verticais e cabem quase inteiras.
+    cover: { x: 42, y: 92, width: 356, height: 386 },
+    coverPosition: "top",
+    gloss: true,
   },
   {
     id: "sms",
@@ -135,7 +149,13 @@ export const consoles: ConsoleConfig[] = [
     folders: ["SMS"],
     extensions: ["sms"],
     coverSystems: ["Sega - Master System - Mark III"],
-    ...box,
+    image: "/cartridges/sms.png",
+    overlay: "/cartridges/sms-overlay.png",
+    width: 460,
+    height: 560,
+    cover: { x: 52, y: 206, width: 356, height: 306 },
+    coverPosition: "top",
+    gloss: true,
   },
   {
     id: "gg",
@@ -144,7 +164,13 @@ export const consoles: ConsoleConfig[] = [
     folders: ["GG"],
     extensions: ["gg"],
     coverSystems: ["Sega - Game Gear"],
-    ...box,
+    image: "/cartridges/gg.png",
+    overlay: "/cartridges/gg-overlay.png",
+    width: 480,
+    height: 380,
+    cover: { x: 34, y: 79, width: 412, height: 245 },
+    coverPosition: "top",
+    gloss: true,
   },
   {
     id: "nds",
@@ -153,7 +179,13 @@ export const consoles: ConsoleConfig[] = [
     folders: ["NDS"],
     extensions: ["nds"],
     coverSystems: ["Nintendo - Nintendo DS"],
-    ...box,
+    image: "/cartridges/nds.png",
+    overlay: "/cartridges/nds-overlay.png",
+    width: 440,
+    height: 420,
+    cover: { x: 34, y: 104, width: 372, height: 288 },
+    coverPosition: "top",
+    gloss: true,
   },
   {
     id: "psx",
@@ -163,7 +195,13 @@ export const consoles: ConsoleConfig[] = [
     extensions: ["pbp", "chd"],
     folderExtensions: ["iso", "bin", "cue"],
     coverSystems: ["Sony - PlayStation"],
-    ...box,
+    // Caixinha de CD: o brilho do plástico vem no overlay, então a capa não leva o brilho do cartucho.
+    image: "/cartridges/psx.png",
+    overlay: "/cartridges/psx-overlay.png",
+    width: 520,
+    height: 460,
+    cover: { x: 68, y: 10, width: 442, height: 440 },
+    gloss: false,
   },
   {
     id: "pce",
@@ -172,26 +210,29 @@ export const consoles: ConsoleConfig[] = [
     folders: ["PCE"],
     extensions: ["pce"],
     coverSystems: ["NEC - PC Engine - TurboGrafx 16"],
-    ...box,
-  },
-  {
-    id: "mame",
-    name: "MAME",
-    core: "mame",
-    folders: ["MAME"],
-    extensions: [],
-    // Caixas do Neo Geo são verticais e oficiais; as bases de arcade trazem flyers horizontais.
-    coverSystems: ["SNK - Neo Geo", "MAME", "FBNeo - Arcade Games"],
-    ...box,
+    image: "/cartridges/pce.png",
+    overlay: "/cartridges/pce-overlay.png",
+    width: 380,
+    height: 560,
+    cover: { x: 30, y: 72, width: 320, height: 410 },
+    coverPosition: "top",
+    gloss: true,
   },
   {
     id: "arcade",
     name: "Arcade",
     core: "arcade",
-    folders: ["ARCADE"],
+    // MAME e FBNeo aparecem juntos, mas cada romset abre no emulador da própria pasta.
+    folderCores: { MAME: "mame" },
+    folders: ["ARCADE", "MAME"],
     extensions: [],
     coverSystems: ["SNK - Neo Geo", "FBNeo - Arcade Games", "MAME"],
-    ...box,
+    // Sem mockup: caixa genérica que segue a proporção da capa.
+    width: 460,
+    height: 620,
+    // Sobra embaixo para as ranhuras da caixa genérica.
+    cover: { x: 30, y: 30, width: 400, height: 510 },
+    gloss: true,
   },
 ];
 

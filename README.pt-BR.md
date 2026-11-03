@@ -37,14 +37,14 @@ O ArcadeLink é um site pessoal de jogos retrô. Entre com o Google, coloque sua
 
 - **O Drive é a biblioteca:** as ROMs ficam em `ArcadeLink/Roms/<console>`, a mesma estrutura do RetroArch. O site nunca guarda as ROMs em servidor.
 - **Saves em qualquer aparelho:** saves de bateria e save states vão para `ArcadeLink/Saves/<console>` ao pausar, sair ou trocar de aba, e no intervalo que você escolher.
-- **Carrossel de cartuchos:** mockups reais de cartucho para SNES, NES, N64 e Game Boy, com a capa do jogo na etiqueta. Os outros consoles usam uma caixa genérica.
+- **Carrossel de cartuchos:** um mockup para cada console, com a capa do jogo na etiqueta: cartuchos, cartão de DS, HuCard e caixinha de CD para PlayStation. Arcade usa uma caixa simples que segue a capa.
 - **Capas automáticas:** as capas vêm do [libretro-thumbnails](https://github.com/libretro-thumbnails), mesmo com nomes bagunçados como `Super Mario World (PT-BR) - [site].sfc`.
 - **Teclado, mouse, toque e gamepad:** a tela inicial e o painel de ajustes inteiros funcionam com controle.
 - **Reabre rápido:** depois da primeira vez, o jogo abre em cerca de um segundo, porque a ROM fica no cache do navegador.
 - **Temas claro e escuro**, botão de jogo aleatório e miniplayer com faixas 8-bit originais.
 
 <p align="center">
-  <img src="docs/screenshots/home-gba.jpg" alt="Jogos de Game Boy Advance na caixa genérica" width="49%">
+  <img src="docs/screenshots/home-gba.jpg" alt="Cartuchos de Game Boy Advance" width="49%">
   <img src="docs/screenshots/home-dark.jpg" alt="Tema escuro na estante de NES" width="49%">
 </p>
 
@@ -65,8 +65,7 @@ Coloque cada ROM na pasta certa dentro de `ArcadeLink/Roms`. As pastas são cria
 | Nintendo DS | `NDS` | `.nds` |
 | PlayStation | `PSX` | `.chd` `.pbp` `.iso` `.bin` `.cue` |
 | PC Engine | `PCE` | `.pce` |
-| MAME (romsets 2003-plus) | `MAME` | `.zip` `.7z` |
-| Arcade (romsets FBNeo) | `ARCADE` | `.zip` `.7z` |
+| Arcade | `ARCADE` (romsets FBNeo) ou `MAME` (romsets MAME 2003-plus) | `.zip` `.7z` |
 
 `.zip` e `.7z` funcionam em qualquer pasta. Extensões compartilhadas, como `.bin`, só valem dentro da pasta do console.
 

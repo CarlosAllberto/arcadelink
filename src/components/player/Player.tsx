@@ -106,7 +106,7 @@ export function Player({ romId }: { romId: string }) {
 
       launched.current = true;
       startEmulator({
-        core: config.core,
+        core: config.folderCores?.[rom.folder?.toUpperCase() ?? ""] ?? config.core,
         title: romTitle(rom.name),
         rom: file,
         volume: settingsForConsole(settings, config.id).gameVolume,

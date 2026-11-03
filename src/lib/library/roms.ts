@@ -2,7 +2,7 @@ import { consoles, type ConsoleConfig, type ConsoleId } from "../../config/conso
 import { romTitles } from "../../config/rom-titles.ts";
 
 /** `version` e `size` vêm do Drive: mudam quando o arquivo é trocado, e invalidam o cache local. */
-export type Rom = { id: string; name: string; console: ConsoleId; version?: string; size?: string };
+export type Rom = { id: string; name: string; console: ConsoleId; folder?: string; version?: string; size?: string };
 export type RomFile = { id: string; name: string; folder: string; version?: string; size?: string };
 
 const ARCHIVES = ["zip", "7z"];
@@ -104,7 +104,7 @@ export function classifyRoms(files: RomFile[]) {
   const roms: Rom[] = [];
   for (const { id, name, folder, version, size } of files) {
     const target = consoleForRom(name, folder);
-    if (target) roms.push({ id, name, console: target, version, size });
+    if (target) roms.push({ id, name, console: target, folder, version, size });
   }
   roms.sort((a, b) => romTitle(a.name).localeCompare(romTitle(b.name), "pt-BR"));
   return { roms, ignored: files.length - roms.length };
