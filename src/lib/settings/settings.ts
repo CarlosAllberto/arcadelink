@@ -1,6 +1,8 @@
 import type { ConsoleId } from "@/config/consoles";
 
 export type Theme = "system" | "light" | "dark";
+export const BACKGROUNDS = ["dots", "grid", "scanlines", "checker", "landscape", "plain"] as const;
+export type Background = (typeof BACKGROUNDS)[number];
 export type Folder = { id: string; name: string };
 
 /** Valores que um console pode sobrescrever. */
@@ -13,6 +15,7 @@ export type Controls = Record<number, Record<number, ControlBinding>>;
 
 export type Settings = ConsoleSettings & {
   theme: Theme;
+  background: Background;
   reduceMotion: boolean;
   floating: boolean;
   musicVolume: number;
@@ -31,6 +34,7 @@ export type Settings = ConsoleSettings & {
 
 export const defaultSettings: Settings = {
   theme: "system",
+  background: "dots",
   reduceMotion: false,
   floating: true,
   gameVolume: 80,
@@ -72,6 +76,9 @@ export function parseSettings(raw: unknown): Settings {
   const value = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   return {
     theme: value.theme === "light" || value.theme === "dark" ? value.theme : "system",
+    background: BACKGROUNDS.includes(value.background as Background)
+      ? (value.background as Background)
+      : defaultSettings.background,
     reduceMotion: flag(value.reduceMotion, defaultSettings.reduceMotion),
     floating: flag(value.floating, defaultSettings.floating),
     gameVolume: volume(value.gameVolume, defaultSettings.gameVolume),

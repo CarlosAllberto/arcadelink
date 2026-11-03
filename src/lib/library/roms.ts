@@ -69,6 +69,8 @@ function coverRank(file: string) {
 
 /** Melhor arquivo da base para o título, ou null se nenhum casar. */
 export function pickCover(files: string[], title: string) {
+  // `rom-titles` pode apontar um arquivo exato da base, como uma região com arte melhor.
+  if (files.includes(`${title}.png`)) return `${title}.png`;
   const key = coverKey(title);
   if (!key) return null;
   const keyed = files.map((file) => ({ file, key: coverKey(file) }));

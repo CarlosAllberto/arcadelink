@@ -7,7 +7,7 @@ import { ControlsSection, SavesSection, VideoSection } from "./GameSections";
 import { wrapIndex } from "@/lib/carousel";
 import type { NavAction } from "@/lib/input/useNavigation";
 import { refreshCovers, scanLibrary, useLibrary } from "@/lib/library/store";
-import type { Theme } from "@/lib/settings/settings";
+import type { Background, Theme } from "@/lib/settings/settings";
 import { updateSettings, useSettings, type SyncStatus } from "@/lib/settings/store";
 
 const TABS = ["Aparência", "Biblioteca", "Áudio", "Controles", "Vídeo", "Saves"] as const;
@@ -15,6 +15,14 @@ const THEMES: { value: Theme; label: string }[] = [
   { value: "system", label: "Sistema" },
   { value: "light", label: "Claro" },
   { value: "dark", label: "Escuro" },
+];
+const BACKGROUND_LABELS: { value: Background; label: string }[] = [
+  { value: "dots", label: "Pontos" },
+  { value: "grid", label: "Grade" },
+  { value: "scanlines", label: "Linhas CRT" },
+  { value: "checker", label: "Xadrez" },
+  { value: "landscape", label: "Paisagem" },
+  { value: "plain", label: "Liso" },
 ];
 const SYNC_LABEL: Record<SyncStatus, string> = {
   off: "Sem conexão com o Drive",
@@ -129,6 +137,19 @@ export function SettingsPanel({ dialogRef, open, onClose, user, syncStatus }: Pr
                   type="button"
                   aria-pressed={settings.theme === value}
                   onClick={() => updateSettings({ theme: value })}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <h2>Fundo</h2>
+            <div className="settings-choice">
+              {BACKGROUND_LABELS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={settings.background === value}
+                  onClick={() => updateSettings({ background: value })}
                 >
                   {label}
                 </button>

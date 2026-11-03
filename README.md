@@ -41,7 +41,7 @@ ArcadeLink is a personal retro gaming site. Sign in with Google, drop your ROMs 
 - **Automatic covers:** box art comes from [libretro-thumbnails](https://github.com/libretro-thumbnails), even for messy file names like `Super Mario World (PT-BR) - [site].sfc`.
 - **Keyboard, mouse, touch and gamepad:** the whole home screen and the settings panel work with a controller.
 - **Fast reopen:** after the first launch, a game opens in about a second, since the ROM is cached in your browser.
-- **Light and dark themes**, a random game button, and a mini player with original 8-bit tracks.
+- **Light and dark themes**, a random game button, and a mini player with 8-bit menu music.
 
 <p align="center">
   <img src="docs/screenshots/home-gba.jpg" alt="Game Boy Advance cartridges" width="49%">

@@ -19,6 +19,33 @@ body {
   user-select: none;
 }
 
+[data-background="grid"] body {
+  background-image:
+    linear-gradient(var(--dot) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dot) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+[data-background="scanlines"] body {
+  background-image: repeating-linear-gradient(to bottom, var(--dot) 0 1px, transparent 1px 4px);
+  background-size: auto;
+}
+
+[data-background="checker"] body {
+  background-image: conic-gradient(var(--dot) 25%, transparent 0 50%, var(--dot) 0 75%, transparent 0);
+  background-size: 48px 48px;
+}
+
+[data-background="landscape"] body {
+  background: var(--landscape) center bottom / cover no-repeat var(--bg);
+  /* Pixel art em 384x216: ampliar sem suavizar mantém os pixels nítidos. */
+  image-rendering: pixelated;
+}
+
+[data-background="plain"] body {
+  background-image: none;
+}
+
 body::after {
   content: "";
   position: fixed;
@@ -411,7 +438,8 @@ button:focus-visible {
   color: var(--text);
   font-family: var(--font-mono);
   font-size: 14px;
-  background: var(--pill-bg);
+  /* Mais opaco e neutro que as pílulas: no escuro, o fundo azul vazava e deixava o painel azulado. */
+  background: var(--panel-bg);
   box-shadow: var(--pill-shadow);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);

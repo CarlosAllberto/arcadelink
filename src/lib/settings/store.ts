@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { getAppFolders, readSettingsFile, writeSettingsFile } from "@/lib/google/drive";
 import { ReconnectError } from "@/lib/google/token";
-import { applyTheme, getTheme } from "@/lib/theme/theme";
+import { applyBackground, applyTheme, getTheme } from "@/lib/theme/theme";
 import { defaultSettings, newerSettings, parseSettings, type Settings } from "./settings";
 
 const STORAGE_KEY = "arcadelink:settings";
@@ -30,6 +30,7 @@ function commit(next: Settings) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {}
   applyTheme(next.theme);
+  applyBackground(next.background);
   listeners.forEach((listener) => listener());
 }
 

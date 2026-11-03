@@ -41,7 +41,7 @@ O ArcadeLink é um site pessoal de jogos retrô. Entre com o Google, coloque sua
 - **Capas automáticas:** as capas vêm do [libretro-thumbnails](https://github.com/libretro-thumbnails), mesmo com nomes bagunçados como `Super Mario World (PT-BR) - [site].sfc`.
 - **Teclado, mouse, toque e gamepad:** a tela inicial e o painel de ajustes inteiros funcionam com controle.
 - **Reabre rápido:** depois da primeira vez, o jogo abre em cerca de um segundo, porque a ROM fica no cache do navegador.
-- **Temas claro e escuro**, botão de jogo aleatório e miniplayer com faixas 8-bit originais.
+- **Temas claro e escuro**, botão de jogo aleatório e miniplayer com músicas 8-bit de menu.
 
 <p align="center">
   <img src="docs/screenshots/home-gba.jpg" alt="Cartuchos de Game Boy Advance" width="49%">

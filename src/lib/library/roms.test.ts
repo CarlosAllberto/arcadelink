@@ -34,6 +34,7 @@ test("pickCover prefere EUA e versão oficial", () => {
   const neoGeo = ["The King of Fighters 2002 (bootleg).png", "The King of Fighters 2002 (NGM-2650)(NGH-2650).png"];
   assert.equal(pickCover(neoGeo, "The King of Fighters 2002"), neoGeo[1]);
   assert.equal(pickCover(files, "(BR)"), null);
+  assert.equal(pickCover(files, "Mask, The (Europe)"), "Mask, The (Europe).png");
 });
 
 test("pickCover trata numeral e aceita nome sem subtítulo", () => {
