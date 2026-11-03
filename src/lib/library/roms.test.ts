@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { classifyRoms, consoleForRom, coverKey, coverTitle, dominantColor, pickCover, romTitle, saveFolderFor } from "./roms.ts";
+import { classifyRoms, consoleForRom, coverKey, coverTitle, dominantColor, pickBios, pickCover, romTitle, saveFolderFor } from "./roms.ts";
 
 test("romTitle limpa os nomes reais da biblioteca", () => {
   assert.equal(romTitle("Super Mario World (PT-BR) - [snesforever.com.br].sfc"), "Super Mario World");
@@ -86,4 +86,11 @@ test("saveFolderFor separa GBC de GB e usa a pasta principal nos demais", () => 
   assert.equal(saveFolderFor("a.gb", ["GB", "GBC"]), "GB");
   assert.equal(saveFolderFor("a.zip", ["GB", "GBC"]), "GB");
   assert.equal(saveFolderFor("a.sfc", ["SNES"]), "SNES");
+});
+
+test("pickBios segue a prioridade e ignora maiúsculas", () => {
+  const files = [{ name: "SCPH1001.BIN" }, { name: "scph5501.bin" }, { name: "outro.bin" }];
+  assert.deepEqual(pickBios(files, ["scph5501.bin", "scph1001.bin"]), { file: files[1], name: "scph5501.bin" });
+  assert.deepEqual(pickBios(files, ["scph7001.bin", "scph1001.bin"]), { file: files[0], name: "scph1001.bin" });
+  assert.equal(pickBios(files, ["neogeo.zip"]), null);
 });

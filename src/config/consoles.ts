@@ -28,6 +28,8 @@ export type ConsoleConfig = {
   core: string;
   /** Core de uma subpasta específica, quando difere do padrão do console. */
   folderCores?: Record<string, string>;
+  /** BIOS aceitas em `ArcadeLink/Bios`, por prioridade; só a primeira encontrada é usada. */
+  bios?: string[];
   /** Sem `image` e `overlay`, o cartucho vira uma caixa genérica que segue a proporção da capa. */
   image?: string;
   /** Logo e selos da etiqueta, que ficam por cima da capa. */
@@ -114,6 +116,7 @@ export const consoles: ConsoleConfig[] = [
     id: "gba",
     name: "Game Boy Advance",
     core: "gba",
+    bios: ["gba_bios.bin"],
     folders: ["GBA"],
     extensions: ["gba"],
     coverSystems: ["Nintendo - Game Boy Advance"],
@@ -195,6 +198,8 @@ export const consoles: ConsoleConfig[] = [
     id: "psx",
     name: "PlayStation",
     core: "psx",
+    // Nomes que o pcsx_rearmed procura; sem BIOS ele usa a HLE, que não roda todos os jogos.
+    bios: ["scph5501.bin", "scph1001.bin", "scph7001.bin", "scph101.bin"],
     folders: ["PSX"],
     extensions: ["pbp", "chd"],
     folderExtensions: ["iso", "bin", "cue"],
@@ -228,6 +233,8 @@ export const consoles: ConsoleConfig[] = [
     core: "arcade",
     // MAME e FBNeo aparecem juntos, mas cada romset abre no emulador da própria pasta.
     folderCores: { MAME: "mame" },
+    // Jogos de Neo Geo precisam do zip inteiro, com este nome, ao lado do romset.
+    bios: ["neogeo.zip"],
     folders: ["ARCADE", "MAME"],
     extensions: [],
     coverSystems: ["SNK - Neo Geo", "FBNeo - Arcade Games", "MAME"],

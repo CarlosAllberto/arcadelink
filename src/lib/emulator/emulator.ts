@@ -5,6 +5,7 @@ const DATA_PATH = `https://cdn.emulatorjs.org/${VERSION}/data/`;
 export type Emulator = {
   controls: Record<number, Record<number, { value?: number; value2?: string }>>;
   pause: (...args: unknown[]) => void;
+  on(event: "saveDatabaseLoaded", handler: (fs: Emulator["gameManager"]["FS"]) => void): void;
   gameManager: {
     FS: {
       analyzePath(path: string): { exists: boolean };
@@ -27,9 +28,13 @@ type Options = {
   core: string;
   title: string;
   rom: File;
+  bios?: { name: string; data: Uint8Array } | null;
   volume: number;
   shader: string;
-  onStart: (emulator: Emulator) => void;
+  /** `log` é o que o RetroArch escreveu até o jogo abrir, para `loadFailure`. */
+  onStart: (emulator: Emulator, log: string[]) => void;
+  /** O próprio EmulatorJS desistiu e mostra o erro dele, sem chamar `onStart`. */
+  onFail: (log: string[]) => void;
   onSaveState: (state: Uint8Array) => void;
   onSaveBattery: (data: Uint8Array) => void;
   onLoadState: (emulator: Emulator) => void;
@@ -47,9 +52,60 @@ function ignoreWakeLockDenial() {
   };
 }
 
+type EmulatorClass = {
+  prototype: { initModule(...args: unknown[]): unknown; startGameError(message: string): void };
+};
+
+/**
+ * O EmulatorJS só repassa o log do RetroArch no modo debug, que também desliga o cache dos cores.
+ * Então trocamos o print do Module quando o emulator.js publica `window.EmulatorJS`.
+ * Devolve o log até agora e para de guardar: o que importa sai antes do jogo abrir.
+ */
+function watchEmulator(onFail: (log: string[]) => void) {
+  const lines: string[] = [];
+  let capturing = true;
+  const print = (line: string) => {
+    if (capturing) lines.push(line);
+  };
+  const takeLog = () => {
+    capturing = false;
+    return lines;
+  };
+  let current: EmulatorClass | undefined;
+  Object.defineProperty(window, "EmulatorJS", {
+    configurable: true,
+    get: () => current,
+    set(next: EmulatorClass) {
+      current = next;
+      const { initModule, startGameError } = next.prototype;
+      next.prototype.initModule = function (...args) {
+        const page = window as unknown as { EJS_Runtime: unknown };
+        const runtime = page.EJS_Runtime;
+        if (typeof runtime === "function") {
+          // Sem -v (que o EmulatorJS só passa no debug) o RetroArch não escreve nem os erros.
+          page.EJS_Runtime = async (module: object) => {
+            const ready = await runtime({ ...module, print, printErr: print });
+            const callMain = ready.callMain;
+            ready.callMain = (args: string[]) => callMain(["-v", ...args]);
+            return ready;
+          };
+        }
+        return initModule.apply(this, args);
+      };
+      // Download, core ou content recusado: o EmulatorJS mostra o erro dele e não chama onGameStart.
+      next.prototype.startGameError = function (message) {
+        startGameError.call(this, message);
+        onFail(takeLog());
+      };
+    },
+  });
+  return takeLog;
+}
+
 export function startEmulator(options: Options) {
   const emulator = () => (window as unknown as { EJS_emulator: Emulator }).EJS_emulator;
   ignoreWakeLockDenial();
+  const takeLog = watchEmulator(options.onFail);
 
   Object.assign(window, {
     EJS_player: "#game",
@@ -71,7 +127,13 @@ export function startEmulator(options: Options) {
       loadSavFiles: false,
       screenRecord: false,
     },
-    EJS_onGameStart: () => options.onStart(emulator()),
+    // O EJS_biosUrl da 4.2.3 trava com File e troca o nome de URLs blob, então a BIOS vai direto para
+    // a pasta do jogo antes de o core abrir. O "ready" sai bem antes, enquanto o core ainda baixa.
+    EJS_ready: () => {
+      const { bios } = options;
+      if (bios) emulator().on("saveDatabaseLoaded", (FS) => FS.writeFile(`/${bios.name}`, bios.data));
+    },
+    EJS_onGameStart: () => options.onStart(emulator(), takeLog()),
     EJS_onSaveState: ({ state }: { state: Uint8Array }) => options.onSaveState(state),
     EJS_onSaveSave: ({ save }: { save: Uint8Array | null }) => save && options.onSaveBattery(save),
     EJS_onLoadState: () => options.onLoadState(emulator()),

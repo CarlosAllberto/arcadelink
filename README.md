@@ -72,6 +72,16 @@ Put each ROM in the matching folder inside `ArcadeLink/Roms`. The folders are cr
 > [!TIP]
 > Arcade ROMs use short codes like `kf2k2mp2.zip`. To show a proper title and cover, add the code to [`src/config/rom-titles.ts`](src/config/rom-titles.ts).
 
+### BIOS
+
+Some consoles need the original BIOS. Put it in `ArcadeLink/Bios`, created next to `Roms` and `Saves`, with one of these names (case does not matter). When there are several, the first one in the list wins. Without a BIOS the game still opens, but games that need it may fail.
+
+| Console | Files |
+| --- | --- |
+| PlayStation | `scph5501.bin` `scph1001.bin` `scph7001.bin` `scph101.bin` |
+| Game Boy Advance | `gba_bios.bin` (optional) |
+| Arcade | `neogeo.zip`, for Neo Geo games |
+
 ## Usage
 
 | Action | Keyboard | Gamepad |
@@ -163,7 +173,7 @@ Run the checks with `npm test`, `npm run lint` and `npm run build`.
 > [!WARNING]
 > Some features of the original plan do not exist in EmulatorJS 4.2.3: Dreamcast, Saturn and PSP cores, configurable analog dead zone (fixed at 0.5), integer scaling, aspect ratio and an LCD shader.
 
-- Arcade and Neo Geo games need the exact romset, and some need BIOS files, which the site does not provide yet.
+- Arcade and Neo Geo games need the exact romset. Newer MAME romsets usually only open from the `ARCADE` folder, with FBNeo.
 - A few games do not resume from a save state with the `snes9x` core, such as Super Bomberman 4. The site detects the black screen, restarts the game and keeps the battery save.
 - Closing the tab without using **Sair** can lose progress since the last automatic save.
 - Full screen needs a click or key press: browsers do not accept a gamepad button as a user gesture.

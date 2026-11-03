@@ -20,7 +20,7 @@
   --dot: rgb(255 255 255 / 0.08);
   --fade: rgb(0 0 0 / 0.55);
   --landscape: url("/backgrounds/landscape-night.png");
-  --pill-bg: rgb(44 46 54 / 0.72);
+  --pill-bg: rgb(32 32 34 / 0.85);
   --panel-bg: rgb(30 30 32 / 0.92);
   --pill-border: rgb(255 255 255 / 0.1);
   --pill-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
@@ -36,7 +36,7 @@
     --dot: rgb(255 255 255 / 0.08);
     --fade: rgb(0 0 0 / 0.55);
     --landscape: url("/backgrounds/landscape-night.png");
-    --pill-bg: rgb(44 46 54 / 0.72);
+    --pill-bg: rgb(32 32 34 / 0.85);
     --panel-bg: rgb(30 30 32 / 0.92);
     --pill-border: rgb(255 255 255 / 0.1);
     --pill-shadow: 0 4px 16px rgb(0 0 0 / 0.35);

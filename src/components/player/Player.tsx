@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { FullscreenOnGesture } from "@/components/ui/FullscreenOnGesture";
 import { consoles } from "@/config/consoles";
 import { isBlackFrame, loadBatterySave, startEmulator, type Emulator } from "@/lib/emulator/emulator";
+import { failureMessage, loadFailure, type LoadFailure } from "@/lib/emulator/failure";
 import { createSaveQueue } from "@/lib/emulator/saves";
-import { downloadRom, readSaveFiles } from "@/lib/google/drive";
+import { downloadBios, downloadRom, readSaveFiles } from "@/lib/google/drive";
 import { ReconnectError } from "@/lib/google/token";
 import { romTitle, saveFolderFor } from "@/lib/library/roms";
 import { getRom } from "@/lib/library/store";
@@ -83,9 +84,16 @@ export function Player({ romId }: { romId: string }) {
       if (!rom || !config) return { error: "Jogo não encontrado. Volte e reescaneie a biblioteca." };
 
       const folder = saveFolderFor(rom.name, config.folders);
-      const [file, [battery, state]] = await Promise.all([
+      const [file, [battery, state], bios] = await Promise.all([
         downloadRom(rom, setProgress),
         readSaveFiles([`${rom.name}.srm`, `${rom.name}.state`], folder),
+        // Sem BIOS, quem não precisa dela abre normalmente.
+        config.bios
+          ? downloadBios(config.bios).catch((failure) => {
+              console.warn("BIOS indisponível:", failure);
+              return null;
+            })
+          : null,
       ]);
       // A pessoa pode ter voltado à tela inicial durante o download.
       if (!document.getElementById("game")) return null;
@@ -95,6 +103,14 @@ export function Player({ romId }: { romId: string }) {
       let emulator: Emulator | null = null;
       // Sem isso, sair regravaria o state preto por cima do arquivo.
       let saveState = settings.autoStateOnExit;
+      const core = config.folderCores?.[rom.folder?.toUpperCase() ?? ""] ?? config.core;
+      // Jogo que não abriu não tem o que salvar, e enviar agora apagaria o save bom do Drive.
+      let failed = false;
+      function fail(failure: LoadFailure | null) {
+        failed = true;
+        setError(failureMessage(failure, core));
+        setStage("error");
+      }
 
       async function exit() {
         if (!emulator) return;
@@ -113,18 +129,25 @@ export function Player({ romId }: { romId: string }) {
 
       launched.current = true;
       startEmulator({
-        core: config.folderCores?.[rom.folder?.toUpperCase() ?? ""] ?? config.core,
+        core,
         title: romTitle(rom.name),
         rom: file,
+        bios,
         volume: settingsForConsole(settings, config.id).gameVolume,
         shader: settingsForConsole(settings, config.id).shader,
-        onSaveState: (data) => saves.state(data),
-        onSaveBattery: (data) => saves.battery(data),
+        onSaveState: (data) => failed || saves.state(data),
+        onSaveBattery: (data) => failed || saves.battery(data),
+        onFail: (log) => fail(loadFailure(log)),
         onLoadState: async (current) => {
           const [saved] = await readSaveFiles([`${rom.name}.state`], folder);
           if (saved) current.gameManager.loadState(saved);
         },
-        onStart(current) {
+        onStart(current, log) {
+          const failure = loadFailure(log);
+          if (failure) {
+            current.pause();
+            return fail(failure);
+          }
           emulator = current;
           running.current = true;
           applyControls(current);

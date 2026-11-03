@@ -1,4 +1,5 @@
 import { romFolders } from "@/config/consoles";
+import { pickBios } from "@/lib/library/roms";
 import { getAccessToken } from "./token";
 
 const API = "https://www.googleapis.com/drive/v3/files";
@@ -9,7 +10,7 @@ const FOLDERS_KEY = "arcadelink:drive-folders";
 export const ROM_CACHE = "arcadelink-roms";
 
 type DriveFile = { id: string; name: string; mimeType: string; size?: string; modifiedTime?: string };
-type SaveFolders = { saves: string; consoles: Record<string, string> };
+type SaveFolders = { saves: string; consoles: Record<string, string>; bios?: string };
 
 async function drive(url: string, init: RequestInit = {}) {
   const token = await getAccessToken();
@@ -78,18 +79,19 @@ function rememberedSaveFolders(): SaveFolders | null {
   }
 }
 
-let appFolders: Promise<{ app: DriveFile; roms: DriveFile; saves: DriveFile }> | null = null;
+let appFolders: Promise<{ app: DriveFile; roms: DriveFile; saves: DriveFile; bios: DriveFile }> | null = null;
 
-/** `ArcadeLink/` com `Saves/<console>/` e `Roms/<console>/`. Criadas pelo app, ficam cobertas pelo `drive.file`. */
+/** `ArcadeLink/` com `Saves/<console>/`, `Roms/<console>/` e `Bios/`. Criadas pelo app, ficam cobertas pelo `drive.file`. */
 export function getAppFolders() {
   appFolders ??= (async () => {
     const app = await findOrCreate("ArcadeLink", "root", FOLDER);
     const saves = await findOrCreate("Saves", app.id, FOLDER);
     const roms = await findOrCreate("Roms", app.id, FOLDER);
+    const bios = await findOrCreate("Bios", app.id, FOLDER);
     await createConsoleFolders(roms.id);
     const consoles = await createConsoleFolders(saves.id);
-    rememberSaveFolders({ saves: saves.id, consoles });
-    return { app, roms, saves };
+    rememberSaveFolders({ saves: saves.id, consoles, bios: bios.id });
+    return { app, roms, saves, bios };
   })().catch((error) => {
     appFolders = null;
     throw error;
@@ -203,4 +205,14 @@ export async function writeSaveFile(name: string, folder: string, data: Uint8Arr
     headers: { "Content-Type": "application/octet-stream" },
     body: new Blob([data as BlobPart]),
   });
+}
+
+/** Primeira BIOS da lista que estiver em `ArcadeLink/Bios`, com o nome que o core espera. */
+export async function downloadBios(names: string[]) {
+  const folder = rememberedSaveFolders()?.bios ?? (await getAppFolders()).bios.id;
+  const found = pickBios(await list(`'${folder}' in parents`), names);
+  if (!found) return null;
+  const { id, name, modifiedTime, size } = found.file;
+  const file = await downloadRom({ id, name, version: modifiedTime, size }, () => {});
+  return { name: found.name, data: new Uint8Array(await file.arrayBuffer()) };
 }

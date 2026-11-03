@@ -128,3 +128,12 @@ export function dominantColor(data: ArrayLike<number>) {
   if (!total) return null;
   return `rgb(${Math.round(r / total)} ${Math.round(g / total)} ${Math.round(b / total)})`;
 }
+
+/** Primeiro nome de `names` presente em `files`, sem diferenciar maiúsculas. */
+export function pickBios<T extends { name: string }>(files: T[], names: string[]) {
+  for (const name of names) {
+    const file = files.find((item) => item.name.toLowerCase() === name.toLowerCase());
+    if (file) return { file, name };
+  }
+  return null;
+}
