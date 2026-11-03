@@ -7,6 +7,8 @@ const GITHUB_API = "https://api.github.com/repos/libretro-thumbnails";
 const GITHUB_RAW = "https://raw.githubusercontent.com/libretro-thumbnails";
 const FOLDER = "Named_Boxarts";
 const TIMEOUT = 8000;
+// A libretro às vezes trava em vez de recusar: sem limite curto, a primeira capa de cada console levaria 17s.
+const LIBRETRO_TIMEOUT = 2500;
 const INDEX_TTL = 24 * 60 * 60 * 1000;
 const COVER_CACHE = "public, max-age=2592000";
 const MISSING_CACHE = "public, max-age=3600";
@@ -21,12 +23,12 @@ function githubRepo(system: string) {
   return system.replaceAll(" ", "_");
 }
 
-function get(url: string) {
-  return fetch(url, { signal: AbortSignal.timeout(TIMEOUT) });
+function get(url: string, timeout = TIMEOUT) {
+  return fetch(url, { signal: AbortSignal.timeout(timeout) });
 }
 
 async function libretroIndex(system: string) {
-  const response = await get(libretroUrl(system));
+  const response = await get(libretroUrl(system), LIBRETRO_TIMEOUT);
   if (!response.ok) throw new Error(`Índice da libretro respondeu ${response.status}`);
   const html = await response.text();
   return [...html.matchAll(/href="([^"?/][^"]*\.png)"/g)].map((match) => decodeURIComponent(match[1]));
@@ -56,7 +58,7 @@ function fetchIndex(system: string) {
 
 async function fetchCover(system: string, file: string) {
   const name = encodeURIComponent(file);
-  const urls = [libretroUrl(system) + name, `${GITHUB_RAW}/${githubRepo(system)}/master/${FOLDER}/${name}`];
+  const urls = [`${GITHUB_RAW}/${githubRepo(system)}/master/${FOLDER}/${name}`, libretroUrl(system) + name];
   for (const url of urls) {
     const image = await get(url).catch(() => null);
     if (image?.ok) return image;

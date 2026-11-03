@@ -3,6 +3,7 @@
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
+import { preconnect } from "react-dom";
 import { Carousel } from "@/components/carousel/Carousel";
 import { Miniplayer } from "@/components/miniplayer/Miniplayer";
 import { handlePanelAction, SettingsPanel } from "@/components/settings/SettingsPanel";
@@ -10,9 +11,9 @@ import { TopBar } from "@/components/topbar/TopBar";
 import { ButtonIcon } from "@/components/ui/ButtonIcon";
 import { consoles, type ConsoleId } from "@/config/consoles";
 import { generatedCover, type Game } from "@/config/games";
-import { wrapIndex } from "@/lib/carousel";
+import { randomOther, wrapIndex } from "@/lib/carousel";
 import { useNavigation } from "@/lib/input/useNavigation";
-import { romTitle } from "@/lib/library/roms";
+import { coverTitle, romTitle } from "@/lib/library/roms";
 import { useLibrary, useLibraryScan, type Library } from "@/lib/library/store";
 import { useDriveSync, useSettings } from "@/lib/settings/store";
 import { useUser } from "@/lib/supabase/useUser";
@@ -25,7 +26,7 @@ function gamesByConsole({ roms, coversVersion }: Library) {
       .map((rom) => {
         const title = romTitle(rom.name);
         const { color, cover } = generatedCover(title);
-        const params = new URLSearchParams({ name: title, v: String(coversVersion) });
+        const params = new URLSearchParams({ name: coverTitle(rom.name), v: String(coversVersion) });
         return { id: rom.id, title, color, cover: `/api/cover/${id}?${params}`, fallback: cover };
       });
   }
@@ -33,6 +34,8 @@ function gamesByConsole({ roms, coversVersion }: Library) {
 }
 
 export function Home() {
+  preconnect("https://cdn.emulatorjs.org");
+  preconnect("https://www.googleapis.com");
   const [consoleIndex, setConsoleIndex] = useState(0);
   const [gameIndexes, setGameIndexes] = useState<Partial<Record<ConsoleId, number>>>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -45,7 +48,10 @@ export function Home() {
   useLibraryScan(syncStatus === "ok" ? settings.romsFolder?.id : undefined);
   const allGames = useMemo(() => gamesByConsole(library), [library]);
 
-  const current = consoles[consoleIndex];
+  // L e R percorrem só os consoles com jogos, para não passar por telas vazias.
+  const withGames = consoles.filter((item) => allGames[item.id].length);
+  const available = withGames.length ? withGames : consoles;
+  const current = available[wrapIndex(consoleIndex, available.length)];
   const games = allGames[current.id];
   // A biblioteca pode encolher depois de um reescaneamento.
   const gameIndex = games.length ? wrapIndex(gameIndexes[current.id] ?? 0, games.length) : 0;
@@ -67,7 +73,17 @@ export function Home() {
   }
 
   function moveConsole(delta: number) {
-    setConsoleIndex((index) => wrapIndex(index + delta, consoles.length));
+    setConsoleIndex((index) => wrapIndex(index + delta, available.length));
+  }
+
+  /** Sorteia entre todos os jogos, de qualquer console, sem repetir o atual. */
+  function randomGame() {
+    const all = available.flatMap((item, index) => allGames[item.id].map((_, game) => ({ index, game })));
+    if (!all.length) return;
+    const now = all.findIndex(({ index, game: i }) => available[index] === current && i === gameIndex);
+    const pick = all[randomOther(all.length, Math.max(now, 0))];
+    setConsoleIndex(pick.index);
+    setGameIndexes((indexes) => ({ ...indexes, [available[pick.index].id]: pick.game }));
   }
 
   function play() {
@@ -83,7 +99,8 @@ export function Home() {
     if (action === "right") moveGame(1);
     if (action === "l") moveConsole(-1);
     if (action === "r") moveConsole(1);
-    if (action === "y") setSettingsOpen(true);
+    if (action === "x") setSettingsOpen(true);
+    if (action === "y") randomGame();
     if (action === "a") play();
   });
 
@@ -137,9 +154,9 @@ export function Home() {
           </button>
         )}
         <footer className="bottombar">
-          <button type="button" className="pill theme-pill" onClick={() => setSettingsOpen(true)}>
+          <button type="button" className="pill random-pill" onClick={randomGame}>
             <ButtonIcon label="Y" />
-            <span>Ajustes</span>
+            <span>Jogo aleatório</span>
           </button>
           <Miniplayer />
         </footer>

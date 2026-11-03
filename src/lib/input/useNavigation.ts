@@ -5,7 +5,7 @@ import { menuActions } from "@/lib/emulator/options";
 import { getSettings } from "@/lib/settings/store";
 import { isCapturing } from "./capture";
 
-export type NavAction = "left" | "right" | "up" | "down" | "l" | "r" | "y" | "a" | "b";
+export type NavAction = "left" | "right" | "up" | "down" | "l" | "r" | "x" | "y" | "a" | "b";
 
 // B só no gamepad: no teclado, Esc já fecha o painel.
 export const MENU_KEYS: Record<string, NavAction> = {
@@ -15,6 +15,7 @@ export const MENU_KEYS: Record<string, NavAction> = {
   arrowdown: "down",
   q: "l",
   e: "r",
+  x: "x",
   y: "y",
   enter: "a",
 };
@@ -45,6 +46,7 @@ function readPad(pad: Gamepad): Record<NavAction, boolean> {
     down: pressed("down") || axisY > 0.5,
     l: pressed("l"),
     r: pressed("r"),
+    x: pressed("x"),
     y: pressed("y"),
     a: pressed("a"),
     b: pressed("b"),

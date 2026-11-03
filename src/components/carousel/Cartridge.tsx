@@ -20,9 +20,13 @@ export function Cartridge({ config, game, priority }: { config: ConsoleConfig; g
   const { width, height, cover } = config;
   const [failed, setFailed] = useState(false);
   const [labelColor, setLabelColor] = useState(game.color);
+  const [ratio, setRatio] = useState(width / height);
 
   function onCoverLoad(event: SyntheticEvent<HTMLImageElement>) {
-    if (config.labelStrips) setLabelColor(coverColor(event.currentTarget) ?? game.color);
+    const image = event.currentTarget;
+    if (config.labelStrips) setLabelColor(coverColor(image) ?? game.color);
+    // Sem mockup, a caixa segue a capa, mas sempre em pé: arte larga é recortada nas laterais.
+    if (!config.image) setRatio(Math.min(image.naturalWidth / image.naturalHeight, width / height));
   }
   const place = (area: { x: number; y: number; width: number; height: number }) => ({
     left: `${(area.x / width) * 100}%`,
@@ -35,11 +39,15 @@ export function Cartridge({ config, game, priority }: { config: ConsoleConfig; g
     <div
       className="cartridge"
       style={{
-        aspectRatio: `${width} / ${height}`,
-        [width >= height ? "width" : "height"]: "var(--cart-size)",
+        aspectRatio: ratio,
+        [ratio >= 1 ? "width" : "height"]: "var(--cart-size)",
       }}
     >
-      <Image src={config.image} alt="" fill sizes={SIZES} priority={priority} draggable={false} />
+      {config.image ? (
+        <Image src={config.image} alt="" fill sizes={SIZES} priority={priority} draggable={false} />
+      ) : (
+        <span className="cartridge-box" />
+      )}
       {config.labelStrips?.map((strip) => (
         <span
           key={strip.x}
@@ -61,7 +69,7 @@ export function Cartridge({ config, game, priority }: { config: ConsoleConfig; g
           onError={() => setFailed(true)}
         />
       </div>
-      <Image src={config.overlay} alt="" fill sizes={SIZES} draggable={false} />
+      {config.overlay && <Image src={config.overlay} alt="" fill sizes={SIZES} draggable={false} />}
     </div>
   );
 }

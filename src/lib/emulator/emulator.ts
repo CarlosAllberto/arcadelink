@@ -16,6 +16,8 @@ export type Emulator = {
     getSaveFile(): Uint8Array | null;
     loadSaveFiles(): void;
     getState(): Uint8Array;
+    restart(): void;
+    screenshot(): Promise<Uint8Array>;
     loadState(state: Uint8Array): void;
     supportsStates(): boolean;
   };
@@ -92,4 +94,27 @@ export function loadBatterySave({ gameManager }: Emulator, data: Uint8Array) {
   if (FS.analyzePath(path).exists) FS.unlink(path);
   FS.writeFile(path, data);
   gameManager.loadSaveFiles();
+}
+
+const SAMPLE = 32;
+const BLACK = 3;
+
+/** Lê o quadro do próprio core, sem depender do que está visível na página. */
+export async function isBlackFrame({ gameManager }: Emulator) {
+  const url = URL.createObjectURL(new Blob([(await gameManager.screenshot()) as BlobPart]));
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const canvas = Object.assign(document.createElement("canvas"), { width: SAMPLE, height: SAMPLE });
+    const context = canvas.getContext("2d");
+    if (!context) return false;
+    context.drawImage(image, 0, 0, SAMPLE, SAMPLE);
+    const { data } = context.getImageData(0, 0, SAMPLE, SAMPLE);
+    let total = 0;
+    for (let i = 0; i < data.length; i += 4) total += data[i] + data[i + 1] + data[i + 2];
+    return total / (SAMPLE * SAMPLE * 3) < BLACK;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

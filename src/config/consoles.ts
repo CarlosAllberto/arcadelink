@@ -1,4 +1,17 @@
-export type ConsoleId = "gb" | "snes" | "nes" | "n64";
+export type ConsoleId =
+  | "gb"
+  | "snes"
+  | "nes"
+  | "n64"
+  | "gba"
+  | "md"
+  | "sms"
+  | "gg"
+  | "nds"
+  | "psx"
+  | "pce"
+  | "mame"
+  | "arcade";
 
 type Area = { x: number; y: number; width: number; height: number };
 
@@ -8,13 +21,16 @@ export type ConsoleConfig = {
   /** Subpastas de `Roms` deste console; a primeira aparece nas mensagens. */
   folders: string[];
   extensions: string[];
+  /** Extensões que vários consoles usam: só valem dentro da subpasta deste console. */
+  folderExtensions?: string[];
   /** Sistemas na base libretro-thumbnails. */
   coverSystems: string[];
   /** Valor de `EJS_core` no EmulatorJS. */
   core: string;
-  image: string;
+  /** Sem mockup, `image` e `overlay` ficam vazios e o cartucho vira uma caixa genérica. */
+  image?: string;
   /** Logo e selos da etiqueta, que ficam por cima da capa. */
-  overlay: string;
+  overlay?: string;
   /** Tamanho do frame no Figma; as áreas abaixo usam a mesma escala. */
   width: number;
   height: number;
@@ -25,8 +41,8 @@ export type ConsoleConfig = {
   labelStrips?: (Area & { radius: string })[];
 };
 
-/** Subpastas criadas em `ArcadeLink/Roms` no Drive, como no RetroArch. */
-export const romFolders = ["GB", "GBC", "GBA", "NES", "SNES", "N64"];
+/** Medidas da caixa genérica, para consoles ainda sem mockup de cartucho. */
+const box = { width: 460, height: 620, cover: { x: 20, y: 20, width: 420, height: 580 }, gloss: true };
 
 // Para adicionar um console: exporte os PNGs para public/cartridges e inclua um item aqui.
 export const consoles: ConsoleConfig[] = [
@@ -93,4 +109,91 @@ export const consoles: ConsoleConfig[] = [
       "polygon(0 4%, 15% 1.7%, 30% 0.5%, 50% 0, 70% 0.5%, 85% 1.7%, 100% 4%, 100% 100%, 0 100%)",
     gloss: true,
   },
+  {
+    id: "gba",
+    name: "Game Boy Advance",
+    core: "gba",
+    folders: ["GBA"],
+    extensions: ["gba"],
+    coverSystems: ["Nintendo - Game Boy Advance"],
+    ...box,
+  },
+  {
+    id: "md",
+    name: "Mega Drive",
+    core: "segaMD",
+    folders: ["MD"],
+    extensions: ["gen", "smd", "md"],
+    folderExtensions: ["bin"],
+    coverSystems: ["Sega - Mega Drive - Genesis"],
+    ...box,
+  },
+  {
+    id: "sms",
+    name: "Master System",
+    core: "segaMS",
+    folders: ["SMS"],
+    extensions: ["sms"],
+    coverSystems: ["Sega - Master System - Mark III"],
+    ...box,
+  },
+  {
+    id: "gg",
+    name: "Game Gear",
+    core: "segaGG",
+    folders: ["GG"],
+    extensions: ["gg"],
+    coverSystems: ["Sega - Game Gear"],
+    ...box,
+  },
+  {
+    id: "nds",
+    name: "Nintendo DS",
+    core: "nds",
+    folders: ["NDS"],
+    extensions: ["nds"],
+    coverSystems: ["Nintendo - Nintendo DS"],
+    ...box,
+  },
+  {
+    id: "psx",
+    name: "PlayStation",
+    core: "psx",
+    folders: ["PSX"],
+    extensions: ["pbp", "chd"],
+    folderExtensions: ["iso", "bin", "cue"],
+    coverSystems: ["Sony - PlayStation"],
+    ...box,
+  },
+  {
+    id: "pce",
+    name: "PC Engine",
+    core: "pce",
+    folders: ["PCE"],
+    extensions: ["pce"],
+    coverSystems: ["NEC - PC Engine - TurboGrafx 16"],
+    ...box,
+  },
+  {
+    id: "mame",
+    name: "MAME",
+    core: "mame",
+    folders: ["MAME"],
+    extensions: [],
+    // Caixas do Neo Geo são verticais e oficiais; as bases de arcade trazem flyers horizontais.
+    coverSystems: ["SNK - Neo Geo", "MAME", "FBNeo - Arcade Games"],
+    ...box,
+  },
+  {
+    id: "arcade",
+    name: "Arcade",
+    core: "arcade",
+    folders: ["ARCADE"],
+    extensions: [],
+    coverSystems: ["SNK - Neo Geo", "FBNeo - Arcade Games", "MAME"],
+    ...box,
+  },
 ];
+
+/** Subpastas criadas em `ArcadeLink/Roms` e `ArcadeLink/Saves` no Drive, como no RetroArch. */
+export const romFolders = consoles.flatMap((item) => item.folders);

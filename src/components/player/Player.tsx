@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { FullscreenOnGesture } from "@/components/ui/FullscreenOnGesture";
 import { consoles } from "@/config/consoles";
-import { loadBatterySave, startEmulator, type Emulator } from "@/lib/emulator/emulator";
+import { isBlackFrame, loadBatterySave, startEmulator, type Emulator } from "@/lib/emulator/emulator";
 import { createSaveQueue } from "@/lib/emulator/saves";
-import { downloadRom, readSaveFile } from "@/lib/google/drive";
+import { downloadRom, readSaveFiles } from "@/lib/google/drive";
 import { ReconnectError } from "@/lib/google/token";
 import { romTitle, saveFolderFor } from "@/lib/library/roms";
 import { getRom } from "@/lib/library/store";
@@ -18,6 +18,19 @@ type Stage = "loading" | "playing" | "saving" | "saveFailed" | "error";
 function leave() {
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   window.location.href = "/";
+}
+
+const RESUME_CHECKS = 3;
+const RESUME_CHECK_DELAY = 2000;
+const NOTICE_TIME = 10_000;
+
+/** Alguns jogos, como Super Bomberman 4, ficam pretos ao retomar um save state no snes9x. */
+async function resumeFailed(emulator: Emulator) {
+  for (let i = 0; i < RESUME_CHECKS; i++) {
+    await new Promise((resolve) => setTimeout(resolve, RESUME_CHECK_DELAY));
+    if (!(await isBlackFrame(emulator).catch(() => false))) return false;
+  }
+  return true;
 }
 
 const SELECT = 8;
@@ -46,6 +59,7 @@ export function Player({ romId }: { romId: string }) {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [uploadFailed, setUploadFailed] = useState(false);
+  const [stateIgnored, setStateIgnored] = useState(false);
   const started = useRef(false);
   const session = useRef<{ exit: () => Promise<void> } | null>(null);
   const launched = useRef(false);
@@ -62,10 +76,9 @@ export function Player({ romId }: { romId: string }) {
       if (!rom || !config) return { error: "Jogo não encontrado. Volte e reescaneie a biblioteca." };
 
       const folder = saveFolderFor(rom.name, config.folders);
-      const [file, battery, state] = await Promise.all([
-        downloadRom(rom.id, rom.name, setProgress),
-        readSaveFile(`${rom.name}.srm`, folder),
-        readSaveFile(`${rom.name}.state`, folder),
+      const [file, [battery, state]] = await Promise.all([
+        downloadRom(rom, setProgress),
+        readSaveFiles([`${rom.name}.srm`, `${rom.name}.state`], folder),
       ]);
       // A pessoa pode ter voltado à tela inicial durante o download.
       if (!document.getElementById("game")) return null;
@@ -73,13 +86,15 @@ export function Player({ romId }: { romId: string }) {
       const saves = createSaveQueue(rom.name, folder, () => setUploadFailed(true));
       if (battery) saves.setLastBattery(battery);
       let emulator: Emulator | null = null;
+      // Sem isso, sair regravaria o state preto por cima do arquivo.
+      let saveState = settings.autoStateOnExit;
 
       async function exit() {
         if (!emulator) return;
         setStage("saving");
         emulator.pause();
         try {
-          saveNow(emulator, saves, settings.autoStateOnExit);
+          saveNow(emulator, saves, saveState);
         } catch (failure) {
           console.error("Falha ao ler o save do emulador:", failure);
           return setStage("saveFailed");
@@ -99,7 +114,7 @@ export function Player({ romId }: { romId: string }) {
         onSaveState: (data) => saves.state(data),
         onSaveBattery: (data) => saves.battery(data),
         onLoadState: async (current) => {
-          const saved = await readSaveFile(`${rom.name}.state`, folder);
+          const [saved] = await readSaveFiles([`${rom.name}.state`], folder);
           if (saved) current.gameManager.loadState(saved);
         },
         onStart(current) {
@@ -107,7 +122,17 @@ export function Player({ romId }: { romId: string }) {
           running.current = true;
           applyControls(current);
           if (battery) loadBatterySave(current, battery);
-          if (state && current.gameManager.supportsStates()) current.gameManager.loadState(state);
+          if (state && current.gameManager.supportsStates()) {
+            current.gameManager.loadState(state);
+            resumeFailed(current).then((failed) => {
+              if (!failed) return;
+              saveState = false;
+              current.gameManager.restart();
+              if (battery) loadBatterySave(current, battery);
+              setStateIgnored(true);
+              setTimeout(() => setStateIgnored(false), NOTICE_TIME);
+            });
+          }
 
           const sync = (withState: boolean) => {
             try {
@@ -124,7 +149,7 @@ export function Player({ romId }: { romId: string }) {
           };
           if (settings.saveInterval) setInterval(() => sync(false), settings.saveInterval * 60_000);
           document.addEventListener("visibilitychange", () => {
-            if (document.hidden) sync(settings.autoStateOnExit);
+            if (document.hidden) sync(saveState);
           });
           setStage("playing");
         },
@@ -186,6 +211,11 @@ export function Player({ romId }: { romId: string }) {
       {uploadFailed && stage === "playing" && (
         <p className="pill player-warning" role="alert">
           Falha ao salvar no Drive. Tentaremos de novo ao sair.
+        </p>
+      )}
+      {stateIgnored && stage === "playing" && (
+        <p className="pill player-warning" role="alert">
+          Este jogo não retomou do save state. Reiniciamos, e seu save de bateria foi mantido.
         </p>
       )}
       {stage !== "playing" && (

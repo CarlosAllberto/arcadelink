@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { classifyRoms, consoleForRom, coverKey, dominantColor, pickCover, romTitle, saveFolderFor } from "./roms.ts";
+import { classifyRoms, consoleForRom, coverKey, coverTitle, dominantColor, pickCover, romTitle, saveFolderFor } from "./roms.ts";
 
 test("romTitle limpa os nomes reais da biblioteca", () => {
   assert.equal(romTitle("Super Mario World (PT-BR) - [snesforever.com.br].sfc"), "Super Mario World");
@@ -10,6 +10,9 @@ test("romTitle limpa os nomes reais da biblioteca", () => {
     "The Legend of Zelda - A Link to the Past",
   );
   assert.equal(romTitle("super_metroid.smc"), "super metroid");
+  assert.equal(romTitle("kf2k2mp2.zip"), "The King of Fighters 2002 Magic Plus II");
+  assert.equal(coverTitle("kf2k2mp2.zip"), "The King of Fighters 2002");
+  assert.equal(coverTitle("Sonic (USA).md"), romTitle("Sonic (USA).md"));
 });
 
 test("coverKey ignora artigo, acento e pontuação", () => {
@@ -26,7 +29,18 @@ test("pickCover prefere EUA e versão oficial", () => {
   assert.equal(pickCover(files, "The Mask"), "Mask, The (USA).png");
   assert.equal(pickCover(["Turtles (USA) (Collection).png", "Turtles (USA).png"], "Turtles"), "Turtles (USA).png");
   assert.equal(pickCover(files, "Inexistente"), null);
+  const neoGeo = ["The King of Fighters 2002 (bootleg).png", "The King of Fighters 2002 (NGM-2650)(NGH-2650).png"];
+  assert.equal(pickCover(neoGeo, "The King of Fighters 2002"), neoGeo[1]);
   assert.equal(pickCover(files, "(BR)"), null);
+});
+
+test("pickCover trata numeral e aceita nome sem subtítulo", () => {
+  const files = ["Street Fighter III 3rd Strike - Fight for the Future (USA).png", "Simpsons, The (World).png", "Pac-Man (USA).png"];
+  assert.equal(pickCover(files, "Street Fighter 3 3rd Strike"), files[0]);
+  assert.equal(pickCover(files, "simpsons"), files[1]);
+  assert.equal(pickCover(files, "Pac"), null);
+  assert.equal(coverKey("Mega Man 2"), coverKey("Mega Man II (USA).png"));
+  assert.equal(coverKey("3 Ninjas"), coverKey("III Ninjas (USA).png"));
 });
 
 test("consoleForRom usa extensão e, em zip, a subpasta", () => {
@@ -35,15 +49,22 @@ test("consoleForRom usa extensão e, em zip, a subpasta", () => {
   assert.equal(consoleForRom("a.z64", ""), "n64");
   assert.equal(consoleForRom("a.zip", "snes"), "snes");
   assert.equal(consoleForRom("a.zip", "GBC"), "gb");
-  assert.equal(consoleForRom("a.zip", "GBA"), null);
-  assert.equal(consoleForRom("a.md", "SNES"), null);
-  assert.equal(consoleForRom("a.gba", "GBA"), null);
+  assert.equal(consoleForRom("a.zip", "GBA"), "gba");
+  assert.equal(consoleForRom("a.gba", "GBA"), "gba");
+  assert.equal(consoleForRom("a.md", "MD"), "md");
+  assert.equal(consoleForRom("a.zip", "MAME"), "mame");
+  assert.equal(consoleForRom("a.zip", "ARCADE"), "arcade");
+  assert.equal(consoleForRom("a.bin", "MD"), "md");
+  assert.equal(consoleForRom("a.bin", "PSX"), "psx");
+  assert.equal(consoleForRom("a.bin", ""), null);
+  assert.equal(consoleForRom("a.zip", "OUTRA"), null);
+  assert.equal(consoleForRom("a.txt", "SNES"), null);
 });
 
 test("classifyRoms conta os ignorados e ordena por título", () => {
   const { roms, ignored } = classifyRoms([
     { id: "1", name: "Zelda.sfc", folder: "SNES" },
-    { id: "2", name: "leia-me.md", folder: "SNES" },
+    { id: "2", name: "leia-me.txt", folder: "SNES" },
     { id: "3", name: "Aladdin.sfc", folder: "SNES" },
   ]);
   assert.deepEqual(roms.map((rom) => rom.id), ["3", "1"]);

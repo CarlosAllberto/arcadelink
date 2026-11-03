@@ -1,11 +1,16 @@
 import { consoles, type ConsoleConfig, type ConsoleId } from "../../config/consoles.ts";
+import { romTitles } from "../../config/rom-titles.ts";
 
-export type Rom = { id: string; name: string; console: ConsoleId };
-export type RomFile = { id: string; name: string; folder: string };
+/** `version` e `size` vêm do Drive: mudam quando o arquivo é trocado, e invalidam o cache local. */
+export type Rom = { id: string; name: string; console: ConsoleId; version?: string; size?: string };
+export type RomFile = { id: string; name: string; folder: string; version?: string; size?: string };
 
 const ARCHIVES = ["zip", "7z"];
 // Preferência de região quando a base tem várias capas do mesmo jogo.
 const REGIONS = ["USA", "World", "Brazil", "Europe", "Japan"];
+const ROMAN: Record<string, string> = { 2: "ii", 3: "iii", 4: "iv", 5: "v", 6: "vi", 7: "vii", 8: "viii", 9: "ix" };
+// Abaixo disso, buscar pelo começo do nome traria capas de jogos sem relação.
+const MIN_PREFIX = 6;
 
 function extension(name: string) {
   return name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
@@ -21,13 +26,28 @@ function withoutTags(name: string) {
     .trim();
 }
 
-/** "Legend of Zelda, The - A Link (BR) (site.com).sfc" vira "The Legend of Zelda - A Link". */
-export function romTitle(fileName: string) {
+function knownTitle(fileName: string) {
   const title = withoutTags(fileName);
+  const known = romTitles[title.toLowerCase()] ?? title;
+  return typeof known === "string" ? { title: known, cover: known } : known;
+}
+
+function withArticle(title: string) {
   return title.replace(/^(.*?), (The|A|An)(?= -|$)/i, "$2 $1");
 }
 
-/** Chave que ignora artigo, acentos e pontuação, para casar "The Mask" com "Mask, The". */
+/** "Legend of Zelda, The - A Link (BR) (site.com).sfc" vira "The Legend of Zelda - A Link". */
+export function romTitle(fileName: string) {
+  return withArticle(knownTitle(fileName).title);
+}
+
+/** Título usado para buscar a capa: o mesmo de `romTitle`, salvo exceção em `rom-titles`. */
+export function coverTitle(fileName: string) {
+  return withArticle(knownTitle(fileName).cover);
+
+}
+
+/** Chave que ignora artigo, acentos, pontuação e numeral, para casar "The Mask" com "Mask, The" e 3 com III. */
 export function coverKey(title: string) {
   return withoutTags(title)
     .normalize("NFD")
@@ -35,11 +55,12 @@ export function coverKey(title: string) {
     .toLowerCase()
     .replace(/^the\s+/, "")
     .replace(/,\s*the\b/, "")
+    .replace(/\b[2-9]\b/g, (digit) => ROMAN[digit])
     .replace(/[^a-z0-9]/g, "");
 }
 
 function coverRank(file: string) {
-  const unofficial = /\((Beta|Proto|Demo|Sample|Hack|Unl|Pirate)[^)]*\)/i.test(file) ? 100 : 0;
+  const unofficial = /\((Beta|Proto|Demo|Sample|Hack|Unl|Pirate|Bootleg)[^)]*\)/i.test(file) ? 100 : 0;
   const region = REGIONS.findIndex((name) => file.includes(name));
   return unofficial + (region < 0 ? REGIONS.length : region) * 2 + (/\(Rev/.test(file) ? 1 : 0);
 }
@@ -48,9 +69,13 @@ function coverRank(file: string) {
 export function pickCover(files: string[], title: string) {
   const key = coverKey(title);
   if (!key) return null;
-  const matches = files.filter((file) => coverKey(file) === key);
+  const keyed = files.map((file) => ({ file, key: coverKey(file) }));
+  let matches = keyed.filter((item) => item.key === key);
+  // ROMs costumam vir sem o subtítulo que a base usa, como "Street Fighter III 3rd Strike".
+  if (!matches.length && key.length >= MIN_PREFIX) matches = keyed.filter((item) => item.key.startsWith(key));
+  const ranked = matches.map((item) => item.file);
   // No empate, o nome mais curto é o lançamento comum, sem coletânea ou edição especial.
-  return matches.sort((a, b) => coverRank(a) - coverRank(b) || a.length - b.length)[0] ?? null;
+  return ranked.sort((a, b) => coverRank(a) - coverRank(b) || a.length - b.length)[0] ?? null;
 }
 
 function consoleByFolder(folder: string) {
@@ -58,12 +83,14 @@ function consoleByFolder(folder: string) {
   return consoles.find((item: ConsoleConfig) => item.folders.includes(name));
 }
 
-/** A extensão manda quando é conhecida; zip e 7z dependem da subpasta. */
+/** A extensão manda quando é só de um console; zip, 7z e as compartilhadas dependem da subpasta. */
 export function consoleForRom(fileName: string, folder: string): ConsoleId | null {
   const ext = extension(fileName);
   const byExtension = consoles.find((item: ConsoleConfig) => item.extensions.includes(ext));
   if (byExtension) return byExtension.id;
-  return ARCHIVES.includes(ext) ? (consoleByFolder(folder)?.id ?? null) : null;
+  const byFolder = consoleByFolder(folder);
+  const allowed = ARCHIVES.includes(ext) || byFolder?.folderExtensions?.includes(ext);
+  return allowed ? (byFolder?.id ?? null) : null;
 }
 
 /** Subpasta dos saves: a da extensão, como GBC, ou a principal do console. */
@@ -75,9 +102,9 @@ export function saveFolderFor(fileName: string, folders: string[]) {
 /** Separa o que entra no carrossel do que é ignorado, como `.md` ou ROMs de GBA. */
 export function classifyRoms(files: RomFile[]) {
   const roms: Rom[] = [];
-  for (const { id, name, folder } of files) {
+  for (const { id, name, folder, version, size } of files) {
     const target = consoleForRom(name, folder);
-    if (target) roms.push({ id, name, console: target });
+    if (target) roms.push({ id, name, console: target, version, size });
   }
   roms.sort((a, b) => romTitle(a.name).localeCompare(romTitle(b.name), "pt-BR"));
   return { roms, ignored: files.length - roms.length };

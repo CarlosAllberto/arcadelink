@@ -28,7 +28,8 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
 export function handlePanelAction(dialog: HTMLDialogElement, action: NavAction) {
   const active = document.activeElement as HTMLElement | null;
 
-  if (action === "b" || action === "y") return dialog.close();
+  if (action === "b" || action === "x") return dialog.close();
+  if (action === "y") return;
   if (action === "a") return active?.click();
 
   if (action === "l" || action === "r") {

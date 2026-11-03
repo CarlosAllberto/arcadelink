@@ -2,6 +2,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
+import { ROM_CACHE } from "@/lib/google/drive";
 import { DRIVE_SCOPE } from "@/lib/google/scope";
 import { clearAccessToken } from "@/lib/google/token";
 import { createClient } from "./client";
@@ -34,5 +35,6 @@ export function signIn() {
 export async function signOut() {
   await fetch("/api/google/token", { method: "DELETE" });
   clearAccessToken();
+  await window.caches?.delete(ROM_CACHE);
   await createClient().auth.signOut();
 }

@@ -43,7 +43,8 @@ export const menuActions = [
   { id: "down", label: "Descer no painel", key: "arrowdown", pad: 13 },
   { id: "l", label: "Console anterior (L)", key: "q", pad: 4 },
   { id: "r", label: "Próximo console (R)", key: "e", pad: 5 },
-  { id: "y", label: "Ajustes (Y)", key: "y", pad: 3 },
+  { id: "y", label: "Jogo aleatório (Y)", key: "y", pad: 3 },
+  { id: "x", label: "Ajustes (X)", key: "x", pad: 2 },
   { id: "a", label: "Confirmar (A)", key: "enter", pad: 0 },
   { id: "b", label: "Voltar (B)", key: "escape", pad: 1 },
 ];
